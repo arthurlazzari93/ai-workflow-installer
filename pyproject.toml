@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-workflow-installer"
+version = "0.1.0"
+description = "CLI and Codex skill for installing reusable AI-assisted development workflow docs."
+requires-python = ">=3.11"
+authors = [{ name = "Arthur Lazzari" }]
+license = { text = "MIT" }
+keywords = ["codex", "skills", "ai-workflow", "agents", "documentation"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Environment :: Console",
+  "Topic :: Software Development :: Documentation",
+]
+
+[project.scripts]
+ai-workflow = "ai_workflow_installer.cli:main"
+ai-skills = "ai_workflow_installer.skill_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ai_workflow_installer = ["skill_bundle/**/*"]
