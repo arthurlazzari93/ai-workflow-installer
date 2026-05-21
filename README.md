@@ -21,10 +21,11 @@ O `ai-workflow-installer` cria uma base comum para resolver isso.
 
 ## O Que Ele Instala
 
-No Codex:
+No assistente de IA usado pelo dev:
 
 - uma skill chamada `ai-workflow-installer`;
-- comandos CLI para instalar e atualizar o workflow em qualquer repo.
+- comandos CLI para instalar e atualizar o workflow em qualquer repo;
+- suporte para times mistos usando Codex e Claude Code.
 
 Dentro do projeto alvo:
 
@@ -67,6 +68,8 @@ Isso evita o pior erro possível: a IA fingir que sabe o que não sabe.
 
 ## Instalação
 
+O pacote Python é o mesmo para todo mundo. Depois da instalação, cada dev registra a skill no assistente que usa: Codex, Claude Code ou os dois.
+
 Pré-requisito: Python 3.11+.
 
 Instale `pipx`:
@@ -84,6 +87,8 @@ Instale o pacote:
 pipx install git+https://github.com/arthurlazzari93/ai-workflow-installer.git
 ```
 
+### Para Devs Que Usam Codex
+
 Registre a skill no Codex:
 
 ```bash
@@ -91,6 +96,39 @@ ai-skills install ai-workflow-installer
 ```
 
 Abra uma nova sessão do Codex para a skill aparecer no contexto.
+
+### Para Devs Que Usam Claude Code
+
+Registre a skill no Claude Code:
+
+```bash
+ai-skills install ai-workflow-installer --codex-home ~/.claude --force
+```
+
+Isso instala a skill em:
+
+```bash
+~/.claude/skills/ai-workflow-installer
+```
+
+O parâmetro `--codex-home` é histórico: ele aponta para a pasta base onde a CLI deve criar `skills/`. Para Claude Code, essa pasta base é `~/.claude`.
+
+Reinicie o Claude Code para a skill aparecer. Depois, você pode chamar a skill pelo nome ou pedir em linguagem natural:
+
+```txt
+Use a skill ai-workflow-installer para instalar o workflow de IA neste projeto.
+```
+
+### Para Devs Que Usam Codex E Claude Code
+
+Instale nos dois ambientes:
+
+```bash
+ai-skills install ai-workflow-installer
+ai-skills install ai-workflow-installer --codex-home ~/.claude --force
+```
+
+Reinicie os dois assistentes depois da instalação.
 
 ## Uso Básico
 
@@ -196,15 +234,38 @@ ai-skills list
 # Instala ou atualiza a skill no Codex
 ai-skills install ai-workflow-installer --force
 
+# Instala ou atualiza a skill no Claude Code
+ai-skills install ai-workflow-installer --codex-home ~/.claude --force
+
 # Mostra a pasta de skills do Codex
 ai-skills path
+
+# Mostra a pasta de skills usada para o Claude Code
+ai-skills path --codex-home ~/.claude
 ```
 
 ## Atualização
 
+Codex:
+
 ```bash
 pipx upgrade ai-workflow-installer
 ai-skills install ai-workflow-installer --force
+```
+
+Claude Code:
+
+```bash
+pipx upgrade ai-workflow-installer
+ai-skills install ai-workflow-installer --codex-home ~/.claude --force
+```
+
+Codex e Claude Code:
+
+```bash
+pipx upgrade ai-workflow-installer
+ai-skills install ai-workflow-installer --force
+ai-skills install ai-workflow-installer --codex-home ~/.claude --force
 ```
 
 ## Desinstalação
@@ -215,7 +276,7 @@ Remover o pacote:
 pipx uninstall ai-workflow-installer
 ```
 
-Remover a skill manualmente:
+Remover a skill do Codex manualmente:
 
 ```bash
 rm -rf ~/.codex/skills/ai-workflow-installer
@@ -225,6 +286,12 @@ Se você usa `CODEX_HOME`, a pasta será:
 
 ```bash
 $CODEX_HOME/skills/ai-workflow-installer
+```
+
+Remover a skill do Claude Code manualmente:
+
+```bash
+rm -rf ~/.claude/skills/ai-workflow-installer
 ```
 
 ## Filosofia
