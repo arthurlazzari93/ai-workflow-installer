@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ai-workflow-installer"
 version = "0.1.0"
 description = "CLI and Codex skill for installing reusable AI-assisted development workflow docs."
+readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Arthur Lazzari" }]
 license = { text = "MIT" }
