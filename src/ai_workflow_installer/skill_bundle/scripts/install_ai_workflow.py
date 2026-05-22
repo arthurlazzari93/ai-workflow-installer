@@ -30,6 +30,35 @@ SKIP_DIRS = {
     "__pycache__",
 }
 
+FRONTEND_REUSE_CANDIDATES = [
+    "components",
+    "src/components",
+    "app/components",
+    "components/ui",
+    "src/components/ui",
+    "ui",
+    "src/ui",
+    "shared/ui",
+    "src/shared/ui",
+    "hooks",
+    "src/hooks",
+    "styles",
+    "src/styles",
+    "theme",
+    "src/theme",
+    "tokens",
+    "src/tokens",
+    "design-system",
+    "packages/ui",
+    "packages/design-system",
+    ".storybook",
+    "storybook",
+    "components.json",
+    "tailwind.config.js",
+    "tailwind.config.ts",
+    "tailwind.config.mjs",
+]
+
 BRIEF_FIELDS = {
     "project": "O que é o projeto",
     "users": "Quem usa",
@@ -38,6 +67,15 @@ BRIEF_FIELDS = {
     "must_not_break": "O que não pode quebrar",
     "known_pains": "Dores conhecidas",
 }
+
+
+@dataclass
+class InstallMode:
+    name: str
+    label: str
+    reason: str
+    existing_docs: list[str] = field(default_factory=list)
+    auto_refresh_existing: bool = False
 
 
 @dataclass
@@ -56,8 +94,49 @@ class Discovery:
     env_examples: list[str] = field(default_factory=list)
     migrations: list[str] = field(default_factory=list)
     tests: list[str] = field(default_factory=list)
+    frontend_reuse: list[str] = field(default_factory=list)
     sensitive_hints: set[str] = field(default_factory=set)
     readme_excerpt: str | None = None
+
+
+AI_DOC_PATHS = [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "AI_CONTEXT.md",
+    "FEATURE_STATUS.md",
+    "PROJECT_MEMORY.md",
+    "TECH_DEBT.md",
+    "docs/ia/README.md",
+]
+
+CUSTOM_AGENT_DOC_PATHS = [
+    "GEMINI.md",
+    ".cursorrules",
+    ".windsurfrules",
+    ".cursor/rules",
+    ".github/copilot-instructions.md",
+]
+
+PROJECT_MARKER_PATHS = [
+    "README.md",
+    "package.json",
+    "pyproject.toml",
+    "requirements.txt",
+    "go.mod",
+    "Cargo.toml",
+    "composer.json",
+    "Gemfile",
+    "src",
+    "app",
+    "apps",
+    "packages",
+]
+
+KIT_MARKERS = [
+    "Fonte canônica do método de trabalho com IA",
+    "docs/ia/PADROES_FRONTEND.md",
+    "docs/ia/DESCOBERTA_E_PLANEJAMENTO.md",
+]
 
 
 def rel(path: Path, root: Path) -> str:
@@ -81,6 +160,74 @@ def read_text(path: Path, limit: int = 8000) -> str:
         return path.read_text(encoding="utf-8", errors="ignore")[:limit]
     except OSError:
         return ""
+
+
+def detect_install_mode(root: Path) -> InstallMode:
+    existing_ai_docs = [path for path in AI_DOC_PATHS if (root / path).exists()]
+    existing_custom_docs = [path for path in CUSTOM_AGENT_DOC_PATHS if (root / path).exists()]
+
+    agents_text = read_text(root / "AGENTS.md", 12000) if (root / "AGENTS.md").exists() else ""
+    has_docs_ia = (root / "docs" / "ia").exists()
+    has_kit = bool(has_docs_ia and (root / "AI_CONTEXT.md").exists() and any(marker in agents_text for marker in KIT_MARKERS))
+    has_project_files = any((root / path).exists() for path in PROJECT_MARKER_PATHS)
+
+    existing_docs = sorted(set(existing_ai_docs + existing_custom_docs))
+
+    if has_kit:
+        return InstallMode(
+            name="update",
+            label="update",
+            reason="Kit ai-workflow já detectado; atualizar workflow existente.",
+            existing_docs=existing_docs,
+            auto_refresh_existing=True,
+        )
+    if existing_docs:
+        return InstallMode(
+            name="migration",
+            label="migration",
+            reason="Documentos de IA/customizados detectados; arquivar e migrar para o kit.",
+            existing_docs=existing_docs,
+            auto_refresh_existing=True,
+        )
+    if has_project_files:
+        return InstallMode(
+            name="existing-project-onboarding",
+            label="existing-project onboarding",
+            reason="Projeto existente sem workflow de IA detectado; gerar contexto inicial.",
+        )
+    return InstallMode(
+        name="fresh",
+        label="fresh",
+        reason="Nenhum workflow de IA ou estrutura de projeto detectada; instalar base limpa.",
+    )
+
+
+def install_mode_lines(install_mode: InstallMode) -> list[str]:
+    lines = [
+        f"- Modo: `{install_mode.label}`. Fonte: detecção automática.",
+        f"- Motivo: {install_mode.reason}",
+    ]
+    if install_mode.existing_docs:
+        lines.append(f"- Docs existentes detectados: {', '.join(install_mode.existing_docs[:12])}.")
+    if install_mode.auto_refresh_existing:
+        lines.append("- Ação padrão: arquivar docs existentes e atualizar o kit.")
+    return lines
+
+
+def add_frontend_reuse_hint(discovery: Discovery, relative: str) -> None:
+    parts = relative.split("/")
+    markers = {"components", "ui", "hooks", "styles", "theme", "tokens", ".storybook", "storybook"}
+    frontend_suffixes = {".css", ".scss", ".sass", ".less", ".ts", ".tsx", ".js", ".jsx", ".vue", ".svelte"}
+    if Path(relative).suffix and Path(relative).suffix not in frontend_suffixes:
+        return
+    for index, part in enumerate(parts[:-1]):
+        if part not in markers:
+            continue
+        end = index + 1
+        if part == "components" and end < len(parts) - 1 and parts[end] == "ui":
+            end += 1
+        discovery.frontend_reuse.append("/".join(parts[:end]))
+        return
 
 
 def detect_package_manager(root: Path) -> str | None:
@@ -190,6 +337,9 @@ def discover_repo(root: Path, project_name: str) -> Discovery:
     discovery = Discovery(root=root, project_name=project_name)
     discovery.package_manager = detect_package_manager(root)
     discovery.top_level_dirs = sorted([path.name for path in root.iterdir() if path.is_dir() and path.name not in SKIP_DIRS])
+    discovery.frontend_reuse = [
+        candidate for candidate in FRONTEND_REUSE_CANDIDATES if (root / candidate).exists()
+    ]
 
     readme = next((root / name for name in ["README.md", "README.rst", "README.txt"] if (root / name).exists()), None)
     if readme:
@@ -240,6 +390,7 @@ def discover_repo(root: Path, project_name: str) -> Discovery:
             discovery.tests.append(relative)
         if lower.startswith("docs/") and relative not in discovery.docs:
             discovery.docs.append(relative)
+        add_frontend_reuse_hint(discovery, relative)
 
     if discovery.ci:
         discovery.sensitive_hints.add("CI/CD")
@@ -258,6 +409,7 @@ def discover_repo(root: Path, project_name: str) -> Discovery:
     discovery.env_examples = sorted(set(discovery.env_examples))[:20]
     discovery.migrations = sorted(set(discovery.migrations))[:30]
     discovery.tests = sorted(set(discovery.tests))[:30]
+    discovery.frontend_reuse = sorted(set(discovery.frontend_reuse))[:30]
     discovery.manifests = sorted(set(discovery.manifests))
     return discovery
 
@@ -368,7 +520,11 @@ Fonte canônica do método de trabalho com IA em **{project_name}**.
 2. Leia `FEATURE_STATUS.md` quando a tarefa tocar produto, UI, API ou comportamento existente.
 3. Leia `TECH_DEBT.md` quando houver risco de stub, simplificação, bug conhecido ou decisão de adiar algo.
 4. Leia contexto específico em `docs/context/` conforme a área afetada.
-5. Leia ADRs em `docs/decisions/` somente quando a tarefa tocar uma decisão arquitetural.
+5. Para frontend/UI, leia `docs/ia/PADROES_FRONTEND.md` e `docs/context/frontend.md` antes de implementar.
+6. Para pedido vago de melhoria, leia `docs/ia/DESCOBERTA_E_PLANEJAMENTO.md`, converse com o humano e aguarde aprovação antes de implementar.
+7. Para pesquisa externa, API, scraping, dependência ou solução desconhecida, leia `docs/ia/PESQUISA_E_REFERENCIAS.md`.
+8. Para qualquer custo real ou potencial, leia `docs/ia/CUSTO_E_APROVACAO.md` e aguarde aprovação humana.
+9. Leia ADRs em `docs/decisions/` somente quando a tarefa tocar uma decisão arquitetural.
 
 Se `AI_CONTEXT.md`, `FEATURE_STATUS.md` ou `TECH_DEBT.md` não existirem, pare e avise.
 
@@ -400,6 +556,10 @@ Use `docs/ia/MATRIZ_DE_RISCO.md` como fonte detalhada.
 - DB/schema/migration/query crítica: Arquiteto + DB + Testador.
 - Dados pessoais/privacidade/legal: Produto + Segurança/Privacidade.
 - Pagamento: Produto + Segurança/Privacidade + Release.
+- Pedido vago de melhoria, UX, "deixar melhor" ou "modernizar": Agente De Descoberta antes de qualquer implementação.
+- UI relevante, tela nova ou componente compartilhado: Produto + Curador De UI + Design QA + Testador.
+- Ambiguidade visual, solução externa, API open source ou scraping: Agente de Pesquisa antes da implementação.
+- Qualquer custo real ou potencial: Planejador De Custo + aprovação humana explícita.
 - Docker/CI/CD/deploy/env/secrets: Infra/SRE + Release.
 - Dependência nova: Arquiteto + Segurança quando runtime ou supply chain forem afetados.
 - `AGENTS.md`, `CLAUDE.md`, `docs/ia/*`, workflows ou scripts de build: Checkpoint de Processo + revisão humana.
@@ -418,14 +578,22 @@ Antes de finalizar:
 
 - critérios de aceite conferidos;
 - diff sem mudança fora de escopo;
+- pedidos vagos transformados em plano aprovado antes de implementar;
 - verificações relevantes rodadas, ou motivo registrado;
 - estados loading/empty/error considerados em UI;
+- reuso de componentes/tokens/padrões existentes considerado em UI;
+- custo real ou potencial aprovado pelo humano antes da implementação;
 - validação/auth/audit considerados em API sensível;
 - ADR, `FEATURE_STATUS.md`, `TECH_DEBT.md` ou `CHANGELOG.md` atualizados quando houver decisão, status, débito ou entrega relevante.
 """
 
 
-def render_ai_context(project_name: str, brief: dict[str, str], discovery: Discovery | None) -> str:
+def render_ai_context(
+    project_name: str,
+    brief: dict[str, str],
+    discovery: Discovery | None,
+    install_mode: InstallMode,
+) -> str:
     product_source = "Fonte: brief." if brief.get("project") else "A confirmar."
     users_source = "Fonte: brief." if brief.get("users") else "A confirmar."
     readme_line = ""
@@ -463,6 +631,10 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 
 {brief_value(brief, "current_goal")} {"Fonte: brief." if brief.get("current_goal") else "A confirmar."}
 
+## Modo De Instalação
+
+{chr(10).join(install_mode_lines(install_mode))}
+
 ## Stack Atual
 
 {chr(10).join(stack_lines(discovery))}
@@ -496,12 +668,13 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 """
 
 
-def render_feature_status(brief: dict[str, str], discovery: Discovery | None) -> str:
+def render_feature_status(brief: dict[str, str], discovery: Discovery | None, install_mode: InstallMode) -> str:
     confirmed: list[str] = []
     inferred: list[str] = []
     confirm: list[str] = []
 
     if discovery:
+        confirmed.append(f"Modo de instalação detectado: `{install_mode.label}`. Fonte: detecção automática.")
         if discovery.top_level_dirs:
             confirmed.append(f"Estrutura detectada: {', '.join(discovery.top_level_dirs[:12])}. Fonte: repo.")
         if discovery.commands:
@@ -514,6 +687,8 @@ def render_feature_status(brief: dict[str, str], discovery: Discovery | None) ->
             confirmed.append("Há Docker/infra detectado. Fonte: repo.")
         if discovery.frameworks:
             inferred.append(f"Capacidades associadas à stack: {', '.join(sorted(discovery.frameworks))}. Fonte: repo; A confirmar escopo real.")
+        if discovery.frontend_reuse:
+            confirmed.append(f"Pontos de reuso frontend detectados: {', '.join(discovery.frontend_reuse[:8])}. Fonte: repo.")
     else:
         confirm.append("Stack e estrutura do repo não foram investigadas porque `--no-discover` foi usado.")
 
@@ -602,8 +777,12 @@ Esta pasta guarda o método de trabalho com agentes de IA. `AGENTS.md` continua 
 2. `MATRIZ_DE_RISCO.md`
 3. `PAPEIS_DOS_AGENTES.md`
 4. `FLUXOS.md`
-5. `DEFINICAO_DE_PRONTO.md`
-6. `PADROES_DE_FALHA.md`
+5. `DESCOBERTA_E_PLANEJAMENTO.md` quando o pedido for vago ou subjetivo
+6. `PADROES_FRONTEND.md` quando tocar UI/frontend
+7. `PESQUISA_E_REFERENCIAS.md` quando houver ambiguidade, API, scraping, dependência ou solução externa
+8. `CUSTO_E_APROVACAO.md` quando houver custo real ou potencial
+9. `DEFINICAO_DE_PRONTO.md`
+10. `PADROES_DE_FALHA.md`
 
 O processo deve acionar especialistas por risco e área afetada, não por ritual fixo.
 """,
@@ -624,6 +803,7 @@ Fluxo: Orquestrador -> Leitor -> Arquiteto se houver trade-off -> Dev da área -
 ## Alto
 
 Auth, permissão, privacidade/legal, dados pessoais, pagamento, DB/schema, migrations, workers, deploy, CI/CD, secrets, dependências ou arquivos de processo.
+Também é alto risco qualquer escolha que crie custo real ou potencial sem aprovação humana.
 
 Fluxo: Orquestrador -> Checkpoint de Orquestração -> especialistas obrigatórios -> Dev -> Testador -> Revisor -> Release quando aplicável.
 
@@ -637,13 +817,17 @@ Fluxo: Orquestrador -> Leitor -> Dev -> Revisor -> Testador. Depois do hotfix, r
 
 - Orquestrador: classifica risco, escolhe especialistas, define critérios de aceite, não implementa.
 - Leitor: mapeia código existente e padrões locais.
+- Agente De Descoberta: entra quando o pedido humano é vago, lê o produto/tela/código, conversa para clarificar intenção, aciona Pesquisa quando útil e retorna opções de implementação para aprovação.
 - Produto/PM: valida valor, escopo, experiência, copy, consentimento e trade-offs.
+- Agente de Pesquisa: busca referências visuais, docs oficiais, APIs open source, exemplos de mercado e soluções técnicas quando há ambiguidade ou dependência externa.
+- Planejador De Custo: identifica custo real ou potencial, estima impacto, propõe alternativas gratuitas e bloqueia implementação até aprovação humana explícita.
 - Arquiteto: escolhe abordagem quando há trade-off técnico ou impacto entre áreas.
-- Dev Frontend/Mobile: implementa UI/client.
+- Curador De UI: mapeia componentes, telas parecidas, tokens, hooks, estilos e padrões reutilizáveis antes de nova UI.
+- Dev Frontend/Mobile: implementa UI/client reaproveitando padrões existentes antes de criar novos.
 - Dev API: implementa rotas, services, validação, jobs e contratos.
 - Dev DB: cuida de schema, migrations, índices, constraints, seed e ownership/RLS.
 - Dev Infra/SRE: cuida de Docker, CI/CD, deploy, observabilidade, backups e healthchecks.
-- Design QA: verifica fidelidade visual, responsividade, acessibilidade e overlap.
+- Design QA: verifica fidelidade visual, consistência com componentes existentes, responsividade, acessibilidade e overlap.
 - Segurança/Privacidade: verifica auth, PII, secrets, autorização, logs e privacidade/legal.
 - Testador: verifica golden path, edge e erro sem enfraquecer testes.
 - Revisor Código: revisa diff, async, tipos, imports, edge cases e escopo.
@@ -676,7 +860,27 @@ Orquestrador -> Leitor leve -> Dev da área -> Revisor -> verificação mínima.
 
 ## UI Relevante
 
-Orquestrador -> Produto -> Design QA -> Dev Frontend/Mobile -> Testador -> Revisor.
+Orquestrador -> Produto -> Agente de Pesquisa se houver ambiguidade visual ou referência externa -> Curador De UI -> Dev Frontend/Mobile -> Design QA -> Testador -> Revisor.
+
+## Pedido Vago De Melhoria
+
+Orquestrador -> Agente De Descoberta -> Leitor/Curador De UI conforme área -> Agente de Pesquisa quando ajudar -> proposta com opções -> aprovação humana -> fluxo normal de implementação.
+
+Exemplos: "melhorar UX", "deixar mais moderno", "melhorar tela principal", "melhorar performance", "organizar dashboard" sem critério claro.
+
+Enquanto não houver plano aprovado, não implementar.
+
+## Reuso De UI
+
+Curador De UI -> Dev Frontend/Mobile. Antes de criar componente novo, mapear componentes, telas parecidas, tokens, estilos, hooks e estados existentes. Criar novo padrão só com justificativa.
+
+## Pesquisa Externa, API Ou Scraping
+
+Orquestrador -> Agente de Pesquisa -> Arquiteto/Produto conforme impacto -> Planejador De Custo se houver cobrança -> Dev da área.
+
+## Custo Real Ou Potencial
+
+Orquestrador -> Planejador De Custo -> aprovação humana explícita -> Dev da área. Sem aprovação, registrar alternativa gratuita ou bloquear a implementação.
 
 ## API
 
@@ -699,6 +903,7 @@ Orquestrador -> Infra/SRE -> Release -> Testador smoke -> Revisor.
 ## Toda Mudança
 
 - Critérios de aceite conferidos.
+- Pedido vago, subjetivo ou amplo foi clarificado e aprovado antes da implementação.
 - Sem mudança fora de escopo.
 - Sem TODO/stub novo sem debt.
 - Verificações relevantes rodadas, ou motivo registrado.
@@ -707,6 +912,8 @@ Orquestrador -> Infra/SRE -> Release -> Testador smoke -> Revisor.
 ## UI
 
 - Estados loading, empty, error e populated considerados.
+- Componentes, telas parecidas, tokens, estilos e hooks existentes foram procurados antes de criar UI nova.
+- Componente novo tem motivo claro: falta de equivalente, variação legítima ou abstração reutilizável.
 - Copy combina com idioma/tom do projeto.
 - Sem violar tokens/design system quando houver.
 - Sem overlap incoerente.
@@ -723,6 +930,184 @@ Orquestrador -> Infra/SRE -> Release -> Testador smoke -> Revisor.
 - Endpoints sensíveis exigem auth.
 - PII não vaza por logs, push payloads, respostas públicas ou screenshots.
 - Secrets não entram em commit.
+
+## Custo
+
+- Nenhuma API paga, SaaS, infra, scraping pago, modelo pago, storage, fila, observabilidade ou dependência com cobrança foi implementada sem aprovação humana explícita.
+""",
+    "DESCOBERTA_E_PLANEJAMENTO.md": """# Descoberta E Planejamento
+
+Use este fluxo quando o pedido humano for vago, subjetivo ou amplo demais para implementação direta.
+
+## Quando Acionar
+
+- "Melhorar UX", "deixar mais bonito", "modernizar", "melhorar tela principal" ou pedido equivalente.
+- Pedido sem tela, público, problema, métrica, prioridade ou critério de aceite claro.
+- Mudança que pode virar redesign, refactor amplo, alteração de comportamento ou custo.
+- Ideia visual difícil de explicar pelo usuário humano.
+
+## Responsabilidade Do Agente De Descoberta
+
+- Entrar em modo de planejamento/conversa antes de qualquer edição.
+- Ler o que a tela, fluxo ou módulo faz hoje usando código, docs, rotas, screenshots ou contexto disponível.
+- Explicar de forma curta o entendimento atual e as lacunas.
+- Fazer poucas perguntas de alto impacto para transformar pedido genérico em objetivo implementável.
+- Acionar Agente de Pesquisa quando referências, benchmark, padrão de UX ou solução técnica externa puderem ajudar.
+- Acionar Curador De UI quando o assunto tocar frontend para mapear componentes e padrões existentes.
+- Acionar Planejador De Custo se qualquer opção tiver custo real ou potencial.
+- Retornar opções concretas de implementação e aguardar aprovação humana.
+
+## Perguntas Boas
+
+- Qual resultado concreto você quer que o usuário perceba?
+- Quem usa essa tela e qual tarefa principal precisa ficar melhor?
+- O problema é clareza, velocidade, confiança, conversão, estética, acessibilidade ou erro?
+- Existe alguma referência visual ou produto que se aproxima do esperado?
+- O que não pode mudar nesta tela ou fluxo?
+- Qual opção você aprova implementar agora?
+
+## Saída Esperada
+
+Antes de implementar, devolver ao humano:
+
+- entendimento da tela/fluxo atual;
+- 2 ou 3 opções de melhoria, com impacto e esforço relativo;
+- riscos, dependências e custo quando houver;
+- recomendação objetiva;
+- pergunta final pedindo aprovação da opção escolhida.
+
+## Regra De Bloqueio
+
+Sem aprovação humana de uma opção concreta, o agente não implementa. Ele pode apenas pesquisar, ler o código, levantar alternativas e refinar o plano.
+""",
+    "PADROES_FRONTEND.md": """# Padrões Frontend
+
+O objetivo é entregar UI premium sem fragmentar o produto. Reuso vem antes de criação.
+
+## Antes De Implementar
+
+- Entender objetivo, público, jornada, restrições e critérios de aceite.
+- Acionar Agente De Descoberta se o pedido for vago, subjetivo ou amplo demais para implementação direta.
+- Procurar telas parecidas, componentes compartilhados, design system, tokens, estilos, hooks e utilitários existentes.
+- Identificar estados obrigatórios: loading, empty, error, populated, disabled e permissões quando aplicável.
+- Acionar Agente de Pesquisa quando a intenção visual estiver ambígua, faltar referência ou houver padrão de mercado relevante.
+- Acionar Planejador De Custo antes de usar asset, serviço, API, biblioteca ou ferramenta com cobrança real ou potencial.
+
+## Reuso Obrigatório
+
+- Preferir componente existente a componente novo.
+- Preferir token/design system existente a valor visual manual.
+- Preferir layout/padrão já usado em tela parecida a composição nova.
+- Não duplicar botões, cards, inputs, modais, tabelas, badges, tabs, empty states, toasts ou feedback visual quando houver equivalente.
+- Se a UI nova revelar padrão recorrente, sugerir extração para componente compartilhado.
+
+## Quando Criar Componente Novo
+
+Crie componente novo somente quando:
+
+- não existe equivalente local;
+- a variação é legítima e não cabe como prop/configuração limpa;
+- a abstração será reutilizável em mais de um ponto;
+- criar o componente reduz duplicação real sem esconder regra de negócio.
+
+Registre no resumo da entrega o motivo da criação e onde o componente deve ser reutilizado.
+
+## Qualidade Visual
+
+- Seguir densidade, espaçamento, tipografia, bordas, sombras, ícones e linguagem visual já existentes.
+- Evitar layouts decorativos quando o produto for ferramenta operacional; priorizar clareza, escaneabilidade e eficiência.
+- Garantir que textos não estourem botões, cards, tabelas ou menus em mobile e desktop.
+- Garantir ausência de overlap incoerente entre elementos.
+- Usar assets reais ou imagens adequadas quando a tela depende de inspeção visual do produto, pessoa, lugar ou objeto.
+
+## UX E Estados
+
+- Toda tela interativa precisa ter estados loading, empty, error e sucesso quando aplicável.
+- Ações destrutivas ou custosas exigem confirmação compatível com o risco.
+- Erros devem orientar recuperação, não apenas mostrar falha genérica.
+- Inputs precisam de label, validação, feedback e estado disabled quando necessário.
+
+## Acessibilidade E Responsividade
+
+- Navegação por teclado preservada em controles interativos.
+- Contraste, foco visível, labels e aria quando necessário.
+- Layout validado nos breakpoints relevantes do projeto.
+- Elementos fixos, toolbars, grids e cards devem ter dimensões estáveis para evitar shift visual.
+
+## Validação
+
+- Validar no navegador quando houver mudança visual relevante.
+- Conferir desktop e mobile quando a UI for responsiva.
+- Testar golden path, estados loading/empty/error e pelo menos um erro realista.
+- Revisor Código confirma que não houve duplicação desnecessária nem quebra de padrão visual.
+""",
+    "PESQUISA_E_REFERENCIAS.md": """# Pesquisa E Referências
+
+Use pesquisa para reduzir incerteza antes da implementação, não para justificar complexidade desnecessária.
+
+## Quando Acionar
+
+- Ideia visual difícil de descrever ou sem referência clara.
+- Apoio ao Agente De Descoberta para transformar pedidos vagos em opções implementáveis.
+- Necessidade de inspiração de mercado, benchmark ou padrão de UX.
+- Web scraping, API open source, SDK, biblioteca ou integração externa.
+- Problema técnico desconhecido ou erro que exige solução atualizada.
+- Mudança dependente de documentação oficial ou comportamento recente.
+
+## Como Pesquisar
+
+- Priorizar documentação oficial, repositórios mantidos, exemplos do próprio projeto e fontes primárias.
+- Para frontend, coletar padrões concretos: layout, comportamento, estados, hierarquia visual e restrições.
+- Para API/scraping, verificar termos de uso, autenticação, rate limits, paginação, estabilidade e custo.
+- Separar fato verificado de inferência.
+- Registrar links, data de consulta quando relevante e recomendação objetiva.
+
+## Entrega Para Frontend
+
+O Agente de Pesquisa deve transformar ambiguidade em opções implementáveis:
+
+- 2 ou 3 direções visuais concretas quando houver escolha de UX.
+- referências de interação, não apenas estética;
+- riscos de acessibilidade, responsividade ou performance;
+- recomendação alinhada ao produto e aos componentes existentes.
+
+Quando atuar junto com o Agente De Descoberta, entregar insumos curtos que ajudem o humano a escolher uma direção, não um relatório longo.
+
+## Restrições
+
+- Não adicionar dependência externa sem avaliar manutenção, licença, segurança e custo.
+- Não usar scraping sem validar permissão, limites e impacto operacional.
+- Não implementar caminho com custo real ou potencial antes do Planejador De Custo e aprovação humana.
+""",
+    "CUSTO_E_APROVACAO.md": """# Custo E Aprovação
+
+Nada que gere custo real ou potencial pode ser implementado sem aprovação humana explícita.
+
+## O Que Conta Como Custo
+
+- API paga, plano SaaS, assinatura, marketplace ou serviço externo cobrado.
+- Infra, deploy, storage, banco, fila, cache, logs, tracing, observabilidade ou CDN com cobrança.
+- Modelos pagos, créditos, tokens, geração de mídia ou processamento por uso.
+- Scraping pago, proxy, captcha solver, dados licenciados ou rate limit pago.
+- Dependência que exige licença comercial ou cria custo operacional relevante.
+
+## Responsabilidade Do Planejador De Custo
+
+- Identificar custo direto, recorrente, por uso e custo oculto de manutenção.
+- Estimar ordem de grandeza quando possível.
+- Apontar alternativa gratuita ou já disponível no projeto.
+- Registrar risco residual se a estimativa for incerta.
+- Bloquear implementação até aprovação humana explícita.
+
+## Aprovação Humana
+
+A aprovação precisa citar o item aprovado e o limite conhecido, por exemplo:
+
+```md
+Aprovado usar API X para o fluxo Y, até o plano gratuito / até R$ N por mês / apenas em ambiente de teste.
+```
+
+Sem aprovação, o agente deve propor alternativa sem custo ou parar a implementação.
 """,
     "PADROES_DE_FALHA.md": """# Padrões De Falha
 
@@ -795,9 +1180,22 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 
 {bullet(sorted({"Next.js", "React", "Vue", "Svelte", "SvelteKit", "Expo", "React Native", "Vite"} & frameworks) if discovery else [])}
 
+## Padrões Reutilizáveis Detectados
+
+{bullet(discovery.frontend_reuse if discovery else [])}
+
+## Reuso Obrigatório
+
+- Antes de criar UI, procurar componentes compartilhados, telas parecidas, tokens, estilos, hooks e utilitários existentes.
+- Registrar no resumo da entrega quando um componente novo for necessário e por quê.
+- Preferir consistência visual do produto a composições novas sem justificativa.
+
 ## A Confirmar
 
 - Design system.
+- Biblioteca de componentes.
+- Tokens de cor, espaçamento, tipografia e radius.
+- Convenções para ícones, tabelas, formulários, modais, cards e empty states.
 - Estados loading/empty/error.
 - Acessibilidade e responsividade.
 """
@@ -898,11 +1296,22 @@ Data: YYYY-MM-DD
     }
 
 
-def discovery_report(discovery: Discovery | None, brief: dict[str, str]) -> str:
+def discovery_report(discovery: Discovery | None, brief: dict[str, str], install_mode: InstallMode) -> str:
     if not discovery:
-        return "# Relatório De Descoberta\n\nDescoberta desativada por `--no-discover`.\n"
+        return f"""# Relatório De Descoberta
+
+## Modo De Instalação
+
+{chr(10).join(install_mode_lines(install_mode))}
+
+Descoberta de repo desativada por `--no-discover`.
+"""
     brief_lines = [f"- {label}: {brief.get(key, 'A confirmar.')}" for key, label in BRIEF_FIELDS.items()]
     return f"""# Relatório De Descoberta
+
+## Modo De Instalação
+
+{chr(10).join(install_mode_lines(install_mode))}
 
 ## Brief
 
@@ -939,6 +1348,10 @@ def discovery_report(discovery: Discovery | None, brief: dict[str, str]) -> str:
 ## Env / Secrets
 
 {bullet(discovery.env_examples[:20])}
+
+## Frontend / Reuso
+
+{bullet(discovery.frontend_reuse[:20])}
 
 ## Migrations / DB
 
@@ -989,6 +1402,7 @@ def install(
     archive: bool,
     brief: dict[str, str],
     discovery: Discovery | None,
+    install_mode: InstallMode,
 ) -> list[str]:
     target = target.resolve()
     archive_root = target / "docs" / "archive"
@@ -1008,8 +1422,8 @@ Antes de trabalhar aqui, leia:
 
 Este arquivo existe apenas para compatibilidade com ferramentas que procuram `CLAUDE.md`. Não duplique regras aqui.
 """,
-        "AI_CONTEXT.md": render_ai_context(project_name, brief, discovery),
-        "FEATURE_STATUS.md": render_feature_status(brief, discovery),
+        "AI_CONTEXT.md": render_ai_context(project_name, brief, discovery, install_mode),
+        "FEATURE_STATUS.md": render_feature_status(brief, discovery, install_mode),
         "PROJECT_MEMORY.md": render_project_memory(),
         "TECH_DEBT.md": render_tech_debt(),
         "CHANGELOG.md": render_changelog(),
@@ -1044,6 +1458,11 @@ def main() -> int:
     parser.add_argument("target_repo", type=Path)
     parser.add_argument("--project-name", default=None)
     parser.add_argument("--force", action="store_true", help="Overwrite existing files after archiving them.")
+    parser.add_argument(
+        "--no-auto-force",
+        action="store_true",
+        help="Do not automatically refresh existing AI docs in update/migration modes; existing files are skipped unless --force is passed.",
+    )
     parser.add_argument("--no-archive", action="store_true", help="Do not archive overwritten files.")
     parser.add_argument("--interactive", action="store_true", help="Collect a short project brief in the terminal.")
     parser.add_argument("--brief-file", type=Path, help="Read project brief from a JSON or Markdown file.")
@@ -1067,10 +1486,11 @@ def main() -> int:
         brief.update(ask_interactive())
 
     target = args.target_repo.resolve()
+    install_mode = detect_install_mode(target)
     project_name = args.project_name or brief.get("project") or target.name
     discovery = discover_repo(target, project_name) if args.discover else None
 
-    report = discovery_report(discovery, brief)
+    report = discovery_report(discovery, brief, install_mode)
     if args.discovery_report is not None:
         if args.discovery_report == "-":
             print(report)
@@ -1079,7 +1499,12 @@ def main() -> int:
             report_path.parent.mkdir(parents=True, exist_ok=True)
             report_path.write_text(report, encoding="utf-8")
 
-    actions = install(target, project_name, args.force, not args.no_archive, brief, discovery)
+    effective_force = args.force or (install_mode.auto_refresh_existing and not args.no_auto_force)
+    print(f"modo detectado: {install_mode.label} — {install_mode.reason}")
+    if effective_force and not args.force and install_mode.auto_refresh_existing:
+        print("auto-refresh: docs existentes serão arquivados e atualizados. Use --no-auto-force para apenas criar arquivos ausentes.")
+
+    actions = install(target, project_name, effective_force, not args.no_archive, brief, discovery, install_mode)
     for action in actions:
         print(action)
     return 0

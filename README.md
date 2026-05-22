@@ -3,6 +3,7 @@
 Um kit para padronizar o jeito que times usam IA no desenvolvimento de software.
 
 Ele instala uma skill do Codex e um conjunto de documentos operacionais que ajudam agentes de IA a entenderem um projeto, classificarem risco, chamarem os especialistas certos e evitarem repetir bugs.
+Também orienta pedidos vagos por uma etapa de descoberta e aprovação, trabalhos de frontend com reuso de componentes, pesquisa de referências quando houver ambiguidade e bloqueio de qualquer custo real sem aprovação humana.
 
 > A ideia central: **IA boa precisa de contexto bom, processo leve e gates fortes onde existe risco.**
 
@@ -45,7 +46,11 @@ docs/
     PAPEIS_DOS_AGENTES.md
     POLITICA_DE_MODELOS.md
     FLUXOS.md
+    DESCOBERTA_E_PLANEJAMENTO.md
     DEFINICAO_DE_PRONTO.md
+    PADROES_FRONTEND.md
+    PESQUISA_E_REFERENCIAS.md
+    CUSTO_E_APROVACAO.md
     PADROES_DE_FALHA.md
   context/
   decisions/
@@ -56,13 +61,20 @@ docs/
 
 O fluxo padrão para projetos existentes é:
 
-1. você dá um brief curto sobre o projeto;
-2. o instalador investiga o repositório;
-3. ele detecta stack, scripts, docs, CI/CD, Docker, testes, migrations e áreas sensíveis;
-4. ele gera os documentos iniciais;
-5. tudo que veio do usuário fica marcado como `Fonte: brief`;
-6. tudo que veio do repo fica marcado como `Fonte: repo`;
-7. inferências e lacunas ficam marcadas como `A confirmar`.
+1. você roda `ai-workflow .` no projeto;
+2. o instalador identifica automaticamente se é instalação nova, onboarding de projeto existente, atualização ou migração;
+3. ele investiga o repositório;
+4. ele detecta stack, scripts, docs, CI/CD, Docker, testes, migrations, áreas sensíveis e pontos de reuso frontend;
+5. ele gera ou atualiza os documentos;
+6. docs antigas de IA são arquivadas antes de atualização/migração;
+7. tudo que veio do usuário fica marcado como `Fonte: brief`;
+8. tudo que veio do repo fica marcado como `Fonte: repo`;
+9. o modo de instalação fica marcado como `Fonte: detecção automática`;
+10. inferências e lacunas ficam marcadas como `A confirmar`;
+11. pedidos vagos como "melhorar UX" viram descoberta, perguntas e plano aprovado antes de implementação;
+12. trabalhos de UI passam a seguir reuso obrigatório de componentes, tokens, layouts e padrões existentes;
+13. pesquisa entra quando houver ambiguidade visual, API, scraping, dependência ou problema técnico desconhecido;
+14. qualquer custo real ou potencial exige aprovação humana antes da implementação.
 
 Isso evita o pior erro possível: a IA fingir que sabe o que não sabe.
 
@@ -136,6 +148,19 @@ Dentro do projeto onde você quer aplicar o método:
 
 ```bash
 cd /caminho/do/projeto
+ai-workflow .
+```
+
+O comando detecta automaticamente o modo:
+
+- `fresh`: projeto sem workflow de IA;
+- `existing-project onboarding`: projeto existente sem instruções de IA;
+- `update`: projeto já tem este kit;
+- `migration`: projeto tem docs antigas/customizadas de IA.
+
+Se você quiser enriquecer o contexto inicial com respostas humanas, use:
+
+```bash
 ai-workflow . --interactive
 ```
 
@@ -155,16 +180,22 @@ Depois disso, o instalador escaneia o repo e cria os documentos.
 Se o projeto já tem `AGENTS.md`, `CLAUDE.md`, `PROJECT_MEMORY.md`, `TECH_DEBT.md` ou docs antigas de IA, use:
 
 ```bash
-ai-workflow . --interactive --force
+ai-workflow .
 ```
 
-Arquivos existentes são arquivados antes de serem substituídos:
+O instalador detecta `migration` ou `update` automaticamente. Arquivos existentes são arquivados antes de serem substituídos:
 
 ```txt
 docs/archive/
 ```
 
 Nada importante deve ser apagado sem cópia histórica.
+
+Para apenas criar arquivos faltantes sem atualizar docs existentes, use:
+
+```bash
+ai-workflow . --no-auto-force
+```
 
 ## Gerar Relatório De Descoberta
 
@@ -217,10 +248,16 @@ JSON também funciona:
 
 ```bash
 # Instala workflow no repo atual
+ai-workflow .
+
+# Instala workflow coletando brief humano
 ai-workflow . --interactive
 
-# Migra docs existentes, arquivando versões anteriores
-ai-workflow . --interactive --force
+# Migra/atualiza docs existentes automaticamente, arquivando versões anteriores
+ai-workflow .
+
+# Cria só arquivos ausentes, sem atualizar docs existentes
+ai-workflow . --no-auto-force
 
 # Instala sem investigação automática
 ai-workflow . --no-discover
@@ -305,6 +342,10 @@ Este kit segue algumas regras simples:
 - estado atual vira feature status;
 - dívida técnica precisa de impacto, contexto e gatilho;
 - bug escapado precisa virar barreira durável;
+- pedido vago precisa virar plano aprovado antes de código;
+- frontend premium começa por reutilizar componentes, tokens e padrões existentes;
+- pesquisa transforma ambiguidade visual ou técnica em opções implementáveis;
+- custo real ou potencial exige aprovação humana explícita antes da implementação;
 - `CLAUDE.md` não deve duplicar `AGENTS.md`;
 - a IA deve marcar incerteza como `A confirmar`.
 
