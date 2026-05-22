@@ -1,18 +1,29 @@
 # Discovery Reference
 
-The installer performs a read-only repo scan before generating docs unless `--no-discover` is passed.
+The installer detects the install mode and performs a read-only repo scan before generating docs unless `--no-discover` is passed.
+
+## Install Mode Detection
+
+- `fresh`: no AI workflow docs or project markers detected.
+- `existing-project onboarding`: project markers exist, but no AI workflow docs were found.
+- `update`: this kit is already installed and should be refreshed.
+- `migration`: old/custom AI docs such as `AGENTS.md`, `CLAUDE.md`, `PROJECT_MEMORY.md`, `TECH_DEBT.md`, `GEMINI.md`, Cursor/Windsurf/Copilot instructions, or `docs/ia/` were found.
+
+In `update` and `migration`, existing AI docs are archived and refreshed by default. Use `--no-auto-force` to only create missing files.
 
 ## Detect
 
 - Manifests: `package.json`, `pyproject.toml`, `requirements.txt`, `go.mod`, `Cargo.toml`, `composer.json`, `Gemfile`.
 - Package manager: `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lock*`.
 - Frameworks/libs: common frontend, backend, DB/ORM, validation, auth, queue, and infra dependencies.
+- Frontend reuse points: shared `components/`, `ui/`, `styles/`, `theme/`, `tokens/`, Storybook, design-system docs, icon sets, and shared hooks.
 - Commands: install, dev, build, test, lint, typecheck, format.
 - Structure: `apps/`, `packages/`, `src/`, `infra/`, `docs/`, `.github/`.
 - Tests: `test/`, `tests/`, `__tests__/`, `*.test.*`, `*.spec.*`, Go/Python test naming.
 - Infra: Dockerfiles, Compose files, `infra/`, `.github/workflows`.
 - DB/migrations: `migrations/`, `drizzle/`, `prisma/`.
 - Env/secrets: `.env.example`, `env.example`.
+- Frontend reuse: component directories, UI libraries, theme/tokens/style folders, Storybook, and Tailwind/component configs.
 - Existing docs: README and `docs/**`.
 
 ## Output
@@ -25,3 +36,4 @@ python scripts/install_ai_workflow.py /path/to/repo --discovery-report docs/ia/D
 ```
 
 Use the report to review generated context and replace `A confirmar` entries with verified facts.
+For frontend projects, use the frontend reuse section to confirm which components and visual tokens agents should reuse first.

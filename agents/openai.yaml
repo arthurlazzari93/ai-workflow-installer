@@ -1,3 +1,3 @@
 display_name: AI Workflow Installer
-short_description: Install AI workflow docs with discovery.
-default_prompt: Install or update the standard AI workflow documentation kit in this repository. If the project has no AI instructions yet, collect a short brief, inspect the repo, and generate initial context from both sources.
+short_description: Install AI workflow docs with planning, frontend, research, and cost gates.
+default_prompt: Install or update the standard AI workflow documentation kit in this repository. Auto-detect whether this is a fresh install, existing-project onboarding, update, or migration; inspect the repo, generate initial context, and include discovery/planning for vague requests, frontend reuse standards, research workflows, and cost approval gates.
