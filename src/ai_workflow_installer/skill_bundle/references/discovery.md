@@ -1,6 +1,7 @@
 # Discovery Reference
 
 The installer detects the install mode and performs a read-only repo scan before generating docs unless `--no-discover` is passed.
+It also synthesizes existing Markdown context before archive/update, so projects with prior memory or docs can seed the new files automatically.
 
 ## Install Mode Detection
 
@@ -25,6 +26,7 @@ In `update` and `migration`, existing AI docs are archived and refreshed by defa
 - Env/secrets: `.env.example`, `env.example`.
 - Frontend reuse: component directories, UI libraries, theme/tokens/style folders, Storybook, and Tailwind/component configs.
 - Existing docs: README and `docs/**`.
+- Existing Markdown context: README, AI docs, context docs, ADRs, debt docs, changelog, feature status and other project Markdown.
 
 ## Output
 
@@ -36,6 +38,7 @@ python scripts/install_ai_workflow.py /path/to/repo --discovery-report docs/ia/D
 ```
 
 Use the report to review generated context and replace `A confirmar` entries with verified facts.
+Review the automatic Markdown synthesis: it preserves source paths and should be treated as useful signal, not absolute truth.
 For frontend projects, use the frontend reuse section to confirm which components and visual tokens agents should reuse first.
 If the project uses an external design system, add its GitHub URL/package/version, branch/tag, public/private status, `gh` access notes and fallback snapshot path to `docs/context/frontend.md`.
 Confirm the dev server/runtime command for visual validation and add it to `docs/context/frontend.md` when discoverable.

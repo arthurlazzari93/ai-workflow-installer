@@ -1,6 +1,6 @@
 ---
 name: ai-workflow-installer
-description: Install or update a reusable AI-agent workflow documentation kit in software repositories. Use when Codex needs to bootstrap AGENTS.md, AI_CONTEXT.md, FEATURE_STATUS.md, TECH_DEBT.md, docs/ia workflows, triage/intake, risk matrix, agent roles, real subagent orchestration guidance, discovery/planning for vague requests, frontend premium standards, UI component reuse, visual/runtime validation, living context sync, external GitHub design system guidance, gh access checks, research/reference workflows, security baseline, validation evidence, cost approval gates, definition of done, failure patterns, ADR/debt structure, or migrate an existing repo to a more reliable AI-assisted development process.
+description: Install or update a reusable AI-agent workflow documentation kit in software repositories. Use when Codex needs to bootstrap AGENTS.md, AI_CONTEXT.md, FEATURE_STATUS.md, TECH_DEBT.md, docs/ia workflows, synthesize existing Markdown context, triage/intake, risk matrix, agent roles, real subagent orchestration guidance, discovery/planning for vague requests, frontend premium standards, UI component reuse, visual/runtime validation, living context sync, external GitHub design system guidance, gh access checks, research/reference workflows, security baseline, validation evidence, cost approval gates, definition of done, failure patterns, ADR/debt structure, or migrate an existing repo to a more reliable AI-assisted development process.
 ---
 
 # AI Workflow Installer
@@ -19,25 +19,29 @@ Use this skill to install or update a reusable AI-assisted development workflow 
    - **update**: repo already has this kit and needs refresh
    - **migration**: repo has long `PROJECT_MEMORY.md`, `TECH_DEBT.md`, `CLAUDE.md`, or custom agent docs that must be archived and indexed
    - **existing-project onboarding**: repo is already in progress but has no AI instructions; collect a short user brief, inspect the repo, then generate initial context from both sources
-3. For existing-project onboarding, collect only the minimum brief before installing:
+3. Let the installer synthesize existing Markdown context automatically before archive/update:
+   - README, existing AI docs, `docs/context`, ADRs, debt docs, changelog, feature status, and other project docs
+   - extract conservative signals for product, users, goals, features, decisions, debt, frontend, security, backend, DB, infra, and commands
+   - preserve source paths instead of treating old docs as absolute truth
+4. For existing-project onboarding, collect only the minimum brief before installing:
    - what the project is
    - who uses it
    - current goal
    - sensitive areas
    - what must not break
    - known pains
-4. Prefer running `scripts/install_ai_workflow.py <target-repo>` for deterministic file creation.
-5. Customize generated placeholders:
+5. Prefer running `scripts/install_ai_workflow.py <target-repo>` for deterministic file creation.
+6. Customize generated placeholders:
    - fill `AI_CONTEXT.md` with the actual stack, commands, and sensitive areas
    - fill `FEATURE_STATUS.md` with real ready/partial/stub status
    - fill `docs/context/frontend.md` with real component libraries, tokens, UI conventions, reusable patterns, and official design system links/packages/access notes when available
    - review `docs/ia/TRIAGEM_E_INTAKE.md`, `docs/ia/ORQUESTRACAO_DE_AGENTES.md`, `docs/ia/DESCOBERTA_E_PLANEJAMENTO.md`, `docs/ia/PADROES_FRONTEND.md`, `docs/ia/VALIDACAO_VISUAL_E_RUNTIME.md`, `docs/ia/PESQUISA_E_REFERENCIAS.md`, `docs/ia/PADROES_SEGURANCA.md`, `docs/ia/SINCRONIA_DE_CONTEXTO.md`, `docs/ia/CUSTO_E_APROVACAO.md`, and `docs/ia/EVIDENCIAS_E_VALIDACAO.md` against project needs
    - keep `AGENTS.md` short and route details to `docs/ia/`
-6. Preserve existing user/project knowledge:
+7. Preserve existing user/project knowledge:
    - archive long docs before replacing them
    - keep compatibility indexes at old root paths
    - do not delete decisions, debts, or project-specific process rules
-7. Validate:
+8. Validate:
    - run formatter/check command if discoverable
    - confirm `AGENTS.md` stays short
    - confirm `CLAUDE.md` is a compatibility bridge, not a duplicate protocol

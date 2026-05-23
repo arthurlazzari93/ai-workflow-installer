@@ -99,6 +99,23 @@ class Discovery:
     readme_excerpt: str | None = None
 
 
+@dataclass
+class ExistingContext:
+    sources: list[str] = field(default_factory=list)
+    product: list[str] = field(default_factory=list)
+    users: list[str] = field(default_factory=list)
+    goals: list[str] = field(default_factory=list)
+    features: list[str] = field(default_factory=list)
+    decisions: list[str] = field(default_factory=list)
+    debts: list[str] = field(default_factory=list)
+    frontend: list[str] = field(default_factory=list)
+    security: list[str] = field(default_factory=list)
+    infra: list[str] = field(default_factory=list)
+    backend: list[str] = field(default_factory=list)
+    db: list[str] = field(default_factory=list)
+    commands: list[str] = field(default_factory=list)
+
+
 AI_DOC_PATHS = [
     "AGENTS.md",
     "CLAUDE.md",
@@ -160,6 +177,116 @@ def read_text(path: Path, limit: int = 8000) -> str:
         return path.read_text(encoding="utf-8", errors="ignore")[:limit]
     except OSError:
         return ""
+
+
+def compact_line(text: str, max_len: int = 220) -> str:
+    cleaned = " ".join(text.strip().split())
+    if len(cleaned) <= max_len:
+        return cleaned
+    return cleaned[: max_len - 3].rstrip() + "..."
+
+
+def add_unique(target: list[str], value: str, limit: int = 12) -> None:
+    value = compact_line(value)
+    if not value or value in target or len(target) >= limit:
+        return
+    target.append(value)
+
+
+def strip_markdown_marker(line: str) -> str:
+    line = line.strip()
+    while line.startswith("#"):
+        line = line[1:].strip()
+    for prefix in ["- [ ]", "- [x]", "- [X]", "- ", "* ", "> "]:
+        if line.startswith(prefix):
+            line = line[len(prefix):].strip()
+            break
+    return line.strip()
+
+
+def markdown_context_files(root: Path) -> list[Path]:
+    candidates: list[Path] = []
+    priority = [
+        "README.md",
+        "AI_CONTEXT.md",
+        "FEATURE_STATUS.md",
+        "PROJECT_MEMORY.md",
+        "TECH_DEBT.md",
+        "CHANGELOG.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+    ]
+    for relative in priority:
+        path = root / relative
+        if path.exists() and path.is_file():
+            candidates.append(path)
+
+    for path in walk_files(root, max_files=8000):
+        if path in candidates or path.suffix.lower() not in {".md", ".mdx", ".txt"}:
+            continue
+        relative = rel(path, root)
+        lower = relative.lower()
+        if lower.startswith("docs/archive/"):
+            continue
+        if lower.startswith("docs/ia/") and (root / "docs" / "ia" / "README.md").exists():
+            continue
+        if lower.startswith("docs/decisions/") or lower.startswith("docs/debt/") or lower.startswith("docs/context/") or lower.startswith("docs/"):
+            candidates.append(path)
+    return candidates[:80]
+
+
+def add_context_line(context: ExistingContext, relative: str, line: str) -> None:
+    text = strip_markdown_marker(line)
+    if len(text) < 12 or text.startswith("```") or text.lower() in {"a confirmar.", "a confirmar"}:
+        return
+    lower = f"{relative} {text}".lower()
+    sourced = f"{text} (Fonte: {relative})"
+
+    if any(term in lower for term in ["produto", "app", "sistema", "plataforma", "saas", "mobile-first", "usuário", "usuario", "cliente", "público", "publico"]):
+        add_unique(context.product, sourced)
+    if any(term in lower for term in ["quem usa", "usuário", "usuario", "cliente", "gestor", "admin", "operador", "time "]):
+        add_unique(context.users, sourced, 8)
+    if any(term in lower for term in ["objetivo", "meta", "mvp", "roadmap", "prioridade", "escopo", "fora de escopo"]):
+        add_unique(context.goals, sourced)
+    if any(term in lower for term in ["feature", "status", "pronto", "parcial", "stub", "mock", "bloqueado", "pendente"]):
+        add_unique(context.features, sourced, 14)
+    if any(term in lower for term in ["adr", "decisão", "decisao", "arquitetura", "escolha", "adotado", "accepted"]):
+        add_unique(context.decisions, sourced, 14)
+    if any(term in lower for term in ["débito", "debito", "debt", "todo", "fixme", "pendência", "pendencia", "risco"]):
+        add_unique(context.debts, sourced, 14)
+    if any(term in lower for term in ["frontend", "ui", "ux", "design system", "componente", "token", "react", "next", "expo", "mobile", "tela", "layout"]):
+        add_unique(context.frontend, sourced, 14)
+    if any(term in lower for term in ["segurança", "seguranca", "privacidade", "lgpd", "auth", "autorização", "autorizacao", "pii", "secret", "token", "senha", "sensível", "sensiveis", "sensíveis", "dados de", "dado de"]):
+        add_unique(context.security, sourced, 14)
+    if any(term in lower for term in ["infra", "docker", "deploy", "ci", "cd", "github actions", "cloudflare", "observabilidade", "homelab"]):
+        add_unique(context.infra, sourced, 12)
+    if any(term in lower for term in ["api", "backend", "endpoint", "hono", "express", "fastapi", "service", "worker", "fila", "queue"]):
+        add_unique(context.backend, sourced, 12)
+    if any(term in lower for term in ["db", "database", "banco", "postgres", "drizzle", "prisma", "migration", "schema", "rls"]):
+        add_unique(context.db, sourced, 12)
+    if any(term in lower for term in ["npm ", "pnpm ", "yarn ", "bun ", "pytest", "cargo ", "go test", "docker compose", "comando", "script"]):
+        add_unique(context.commands, sourced, 10)
+
+
+def synthesize_existing_context(root: Path) -> ExistingContext:
+    context = ExistingContext()
+    for path in markdown_context_files(root):
+        relative = rel(path, root)
+        text = read_text(path, 20000)
+        if not text.strip():
+            continue
+        context.sources.append(relative)
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("|") or line.startswith("```"):
+                continue
+            is_heading = line.startswith("#")
+            is_bullet = line.startswith(("- ", "* ", "- [", "> "))
+            has_signal = any(marker in line.lower() for marker in ["fonte:", "status:", "decisão", "decisao", "débito", "debito", "objetivo", "produto", "frontend", "segurança", "seguranca", "infra", "api", "db"])
+            if is_heading or is_bullet or has_signal:
+                add_context_line(context, relative, line)
+    context.sources = context.sources[:30]
+    return context
 
 
 def detect_install_mode(root: Path) -> InstallMode:
@@ -606,6 +733,7 @@ def render_ai_context(
     brief: dict[str, str],
     discovery: Discovery | None,
     install_mode: InstallMode,
+    existing_context: ExistingContext | None,
 ) -> str:
     product_source = "Fonte: brief." if brief.get("project") else "A confirmar."
     users_source = "Fonte: brief." if brief.get("users") else "A confirmar."
@@ -628,6 +756,12 @@ def render_ai_context(
     if discovery and discovery.env_examples:
         anti_patterns.append("Comitar secrets ou arquivos `.env` reais.")
 
+    product_context = existing_context.product if existing_context else []
+    users_context = existing_context.users if existing_context else []
+    goals_context = existing_context.goals if existing_context else []
+    decision_context = existing_context.decisions if existing_context else []
+    source_context = existing_context.sources if existing_context else []
+
     return f"""# AI_CONTEXT.md
 
 Contexto curto e sempre lido do projeto **{project_name}**.
@@ -636,13 +770,25 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 
 {brief_value(brief, "project")} {product_source}{readme_line}
 
+### Sinais Encontrados Em Docs Existentes
+
+{bullet(product_context)}
+
 ## Usuários
 
 {brief_value(brief, "users")} {users_source}
 
+### Sinais Encontrados Em Docs Existentes
+
+{bullet(users_context)}
+
 ## Objetivo Atual
 
 {brief_value(brief, "current_goal")} {"Fonte: brief." if brief.get("current_goal") else "A confirmar."}
+
+### Sinais Encontrados Em Docs Existentes
+
+{bullet(goals_context)}
 
 ## Modo De Instalação
 
@@ -663,6 +809,10 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 - `docs/decisions/`: ADRs por tema.
 - `docs/debt/`: débitos detalhados por área.
 
+## Fontes Lidas Para Síntese Automática
+
+{bullet(source_context)}
+
 ## Comandos Canônicos
 
 {chr(10).join(command_lines(discovery))}
@@ -679,6 +829,10 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 
 {bullet(anti_patterns)}
 
+## Decisões E Memória Detectadas
+
+{bullet(decision_context)}
+
 ## Frescor Do Contexto
 
 - Gerado na instalação do workflow.
@@ -687,7 +841,12 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 """
 
 
-def render_feature_status(brief: dict[str, str], discovery: Discovery | None, install_mode: InstallMode) -> str:
+def render_feature_status(
+    brief: dict[str, str],
+    discovery: Discovery | None,
+    install_mode: InstallMode,
+    existing_context: ExistingContext | None,
+) -> str:
     confirmed: list[str] = []
     inferred: list[str] = []
     confirm: list[str] = []
@@ -711,9 +870,11 @@ def render_feature_status(brief: dict[str, str], discovery: Discovery | None, in
     else:
         confirm.append("Stack e estrutura do repo não foram investigadas porque `--no-discover` foi usado.")
 
+    if existing_context and existing_context.features:
+        inferred.extend(existing_context.features[:10])
     if brief.get("known_pains"):
         confirm.append(f"Dores conhecidas informadas: {brief['known_pains']}. Fonte: brief.")
-    confirm.append("Listar manualmente features prontas, parciais, stubadas e bloqueadas após primeira revisão humana.")
+    confirm.append("Revisar manualmente features prontas, parciais, stubadas e bloqueadas após a síntese automática.")
 
     return f"""# FEATURE_STATUS.md
 
@@ -738,8 +899,10 @@ Mapa operacional do que existe, o que está parcial e o que ainda é stub.
 """
 
 
-def render_project_memory() -> str:
-    return """# PROJECT_MEMORY.md
+def render_project_memory(existing_context: ExistingContext | None) -> str:
+    decisions = existing_context.decisions if existing_context else []
+    sources = existing_context.sources if existing_context else []
+    return f"""# PROJECT_MEMORY.md
 
 Índice de compatibilidade das decisões arquiteturais.
 
@@ -753,11 +916,20 @@ def render_project_memory() -> str:
 ## ADRs
 
 - [docs/decisions/README.md](docs/decisions/README.md)
+
+## Síntese Automática De Memória Existente
+
+{bullet(decisions)}
+
+## Fontes Lidas
+
+{bullet(sources)}
 """
 
 
-def render_tech_debt() -> str:
-    return """# TECH_DEBT.md
+def render_tech_debt(existing_context: ExistingContext | None) -> str:
+    debts = existing_context.debts if existing_context else []
+    return f"""# TECH_DEBT.md
 
 Índice curto dos débitos técnicos. Entradas detalhadas vivem em `docs/debt/`.
 
@@ -776,6 +948,10 @@ def render_tech_debt() -> str:
 - [Frontend e UX](docs/debt/frontend-ux.md)
 - [Qualidade e testes](docs/debt/qualidade-testes.md)
 - [Resolvidos](docs/debt/resolvidos.md)
+
+## Síntese Automática De Débitos Existentes
+
+{bullet(debts)}
 """
 
 
@@ -1638,7 +1814,17 @@ Aplica a:
 }
 
 
-def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str, str]:
+def context_docs(
+    discovery: Discovery | None,
+    brief: dict[str, str],
+    existing_context: ExistingContext | None,
+) -> dict[str, str]:
+    product_context = existing_context.product if existing_context else []
+    security_context = existing_context.security if existing_context else []
+    frontend_context = existing_context.frontend if existing_context else []
+    backend_context = existing_context.backend if existing_context else []
+    db_context = existing_context.db if existing_context else []
+    infra_context = existing_context.infra if existing_context else []
     docs: dict[str, str] = {
         "produto.md": f"""# Contexto Produto
 
@@ -1648,6 +1834,10 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 - Quem usa: {brief_value(brief, "users")}
 - Objetivo atual: {brief_value(brief, "current_goal")}
 - Dores conhecidas: {brief_value(brief, "known_pains")}
+
+## Fonte: docs existentes
+
+{bullet(product_context)}
 
 ## A Confirmar
 
@@ -1670,6 +1860,10 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 ## Fonte: repo
 
 {bullet(discovery.sensitive_hints if discovery else set())}
+
+## Fonte: docs existentes
+
+{bullet(security_context)}
 
 ## A Confirmar
 
@@ -1695,6 +1889,10 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 ## Padrões Reutilizáveis Detectados
 
 {bullet(discovery.frontend_reuse if discovery else [])}
+
+## Fonte: docs existentes
+
+{bullet(frontend_context)}
 
 ## Reuso Obrigatório
 
@@ -1742,6 +1940,10 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 
 {bullet(sorted({"Hono", "Express", "Fastify", "NestJS", "Django", "FastAPI", "Flask"} & frameworks) if discovery else [])}
 
+## Fonte: docs existentes
+
+{bullet(backend_context)}
+
 ## A Confirmar
 
 - Formato de erro.
@@ -1759,6 +1961,10 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 ## Fonte: repo
 
 {bullet(discovery.migrations[:12] if discovery else [])}
+
+## Fonte: docs existentes
+
+{bullet(db_context)}
 
 ## A Confirmar
 
@@ -1781,6 +1987,10 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 
 ### CI/CD
 {bullet(discovery.ci[:12] if discovery else [])}
+
+## Fonte: docs existentes
+
+{bullet(infra_context)}
 
 ## A Confirmar
 
@@ -1847,7 +2057,19 @@ Data: YYYY-MM-DD
     }
 
 
-def discovery_report(discovery: Discovery | None, brief: dict[str, str], install_mode: InstallMode) -> str:
+def discovery_report(
+    discovery: Discovery | None,
+    brief: dict[str, str],
+    install_mode: InstallMode,
+    existing_context: ExistingContext | None,
+) -> str:
+    context_sources = existing_context.sources if existing_context else []
+    context_highlights: list[str] = []
+    if existing_context:
+        context_highlights.extend(existing_context.product[:4])
+        context_highlights.extend(existing_context.features[:4])
+        context_highlights.extend(existing_context.decisions[:4])
+        context_highlights.extend(existing_context.debts[:4])
     if not discovery:
         return f"""# Relatório De Descoberta
 
@@ -1856,6 +2078,14 @@ def discovery_report(discovery: Discovery | None, brief: dict[str, str], install
 {chr(10).join(install_mode_lines(install_mode))}
 
 Descoberta de repo desativada por `--no-discover`.
+
+## Síntese De Contexto Existente
+
+### Fontes
+{bullet(context_sources)}
+
+### Destaques
+{bullet(context_highlights)}
 """
     brief_lines = [f"- {label}: {brief.get(key, 'A confirmar.')}" for key, label in BRIEF_FIELDS.items()]
     return f"""# Relatório De Descoberta
@@ -1883,6 +2113,14 @@ Descoberta de repo desativada por `--no-discover`.
 ## Docs Existentes
 
 {bullet(discovery.docs[:20])}
+
+## Síntese De Contexto Existente
+
+### Fontes
+{bullet(context_sources)}
+
+### Destaques
+{bullet(context_highlights)}
 
 ## Testes
 
@@ -1954,6 +2192,7 @@ def install(
     brief: dict[str, str],
     discovery: Discovery | None,
     install_mode: InstallMode,
+    existing_context: ExistingContext | None,
 ) -> list[str]:
     target = target.resolve()
     archive_root = target / "docs" / "archive"
@@ -1973,17 +2212,17 @@ Antes de trabalhar aqui, leia:
 
 Este arquivo existe apenas para compatibilidade com ferramentas que procuram `CLAUDE.md`. Não duplique regras aqui.
 """,
-        "AI_CONTEXT.md": render_ai_context(project_name, brief, discovery, install_mode),
-        "FEATURE_STATUS.md": render_feature_status(brief, discovery, install_mode),
-        "PROJECT_MEMORY.md": render_project_memory(),
-        "TECH_DEBT.md": render_tech_debt(),
+        "AI_CONTEXT.md": render_ai_context(project_name, brief, discovery, install_mode, existing_context),
+        "FEATURE_STATUS.md": render_feature_status(brief, discovery, install_mode, existing_context),
+        "PROJECT_MEMORY.md": render_project_memory(existing_context),
+        "TECH_DEBT.md": render_tech_debt(existing_context),
         "CHANGELOG.md": render_changelog(),
     }
 
     groups = [
         ("", root_docs),
         ("docs/ia", DOCS_IA),
-        ("docs/context", context_docs(discovery, brief)),
+        ("docs/context", context_docs(discovery, brief, existing_context)),
         ("docs/decisions", decision_docs()),
         ("docs/debt", DEBT_DOCS),
     ]
@@ -2039,9 +2278,10 @@ def main() -> int:
     target = args.target_repo.resolve()
     install_mode = detect_install_mode(target)
     project_name = args.project_name or brief.get("project") or target.name
+    existing_context = synthesize_existing_context(target) if args.discover else ExistingContext()
     discovery = discover_repo(target, project_name) if args.discover else None
 
-    report = discovery_report(discovery, brief, install_mode)
+    report = discovery_report(discovery, brief, install_mode, existing_context)
     if args.discovery_report is not None:
         if args.discovery_report == "-":
             print(report)
@@ -2055,7 +2295,10 @@ def main() -> int:
     if effective_force and not args.force and install_mode.auto_refresh_existing:
         print("auto-refresh: docs existentes serão arquivados e atualizados. Use --no-auto-force para apenas criar arquivos ausentes.")
 
-    actions = install(target, project_name, effective_force, not args.no_archive, brief, discovery, install_mode)
+    if existing_context.sources:
+        print(f"síntese de contexto: {len(existing_context.sources)} arquivo(s) markdown lidos antes da atualização.")
+
+    actions = install(target, project_name, effective_force, not args.no_archive, brief, discovery, install_mode, existing_context)
     for action in actions:
         print(action)
     return 0
