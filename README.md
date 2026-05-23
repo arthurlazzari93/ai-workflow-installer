@@ -171,11 +171,12 @@ Abra uma nova sessão do Codex para a skill aparecer.
 
 ### Linux
 
-Instale o `pipx`:
+Em Ubuntu/Debian/WSL, instale o `pipx` pelo gerenciador da distro. Não use `python3 -m pip install --user pipx`, porque versões recentes bloqueiam esse caminho com `externally-managed-environment`.
 
 ```bash
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+sudo apt update
+sudo apt install -y pipx python3-venv
+pipx ensurepath
 ```
 
 Feche e reabra o terminal.
