@@ -36,11 +36,13 @@ O que a skill faz:
 
 1. Detecta que o projeto ainda não tem workflow de IA.
 2. Inspeciona o repositório.
-3. Detecta stack, scripts, testes, Docker, CI/CD, migrations, docs e pontos de reuso frontend.
-4. Cria os arquivos base.
-5. Marca informações detectadas como `Fonte: repo`.
-6. Marca informações ausentes ou inferidas como `A confirmar`.
-7. Cria um processo inicial para o Codex trabalhar com triagem, risco, validação e evidência.
+3. Lê Markdown existente quando houver, como README e docs do projeto.
+4. Detecta stack, scripts, testes, Docker, CI/CD, migrations, docs e pontos de reuso frontend.
+5. Cria os arquivos base.
+6. Marca informações detectadas como `Fonte: repo`.
+7. Marca trechos vindos de Markdown existente com o caminho do arquivo de origem.
+8. Marca informações ausentes ou inferidas como `A confirmar`.
+9. Cria um processo inicial para o Codex trabalhar com triagem, risco, validação e evidência.
 
 ### Projeto Com Contexto De IA Fora Do Padrão
 
@@ -56,12 +58,14 @@ Este é o caso em que o projeto já tem alguma documentação, mas espalhada, du
 O que a skill faz:
 
 1. Detecta `migration` ou `update`.
-2. Arquiva documentos antigos em `docs/archive/` antes de substituir.
-3. Mantém `AGENTS.md` como fonte canônica curta.
-4. Transforma `CLAUDE.md` em ponte de compatibilidade.
-5. Reorganiza memória, dívida técnica, decisões e contexto em arquivos próprios.
-6. Preserva histórico em vez de apagar conhecimento.
-7. Atualiza o projeto para o formato da skill.
+2. Lê os Markdown atuais antes de arquivar ou substituir.
+3. Extrai sinais de produto, usuários, objetivo, features, decisões, débitos, frontend, segurança, backend, DB e infra.
+4. Arquiva documentos antigos em `docs/archive/` antes de substituir.
+5. Mantém `AGENTS.md` como fonte canônica curta.
+6. Transforma `CLAUDE.md` em ponte de compatibilidade.
+7. Reorganiza memória, dívida técnica, decisões e contexto em arquivos próprios.
+8. Preserva histórico em vez de apagar conhecimento.
+9. Atualiza o projeto para o formato da skill.
 
 ### Projeto Que Já Usa Esta Skill
 
