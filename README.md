@@ -1,34 +1,86 @@
 # AI Workflow Installer
 
-Um kit para padronizar o jeito que times usam IA no desenvolvimento de software.
+Skill e CLI para instalar um workflow de desenvolvimento com IA dentro de projetos de software.
 
-Ele instala uma skill do Codex e um conjunto de documentos operacionais que ajudam agentes de IA a entenderem um projeto, classificarem risco, chamarem os especialistas certos e evitarem repetir bugs.
-Também orienta pedidos vagos por uma etapa de descoberta e aprovação, trabalhos de frontend com reuso de componentes, pesquisa de referências quando houver ambiguidade e bloqueio de qualquer custo real sem aprovação humana.
+## 1. O Que A Skill Resolve
 
-> A ideia central: **IA boa precisa de contexto bom, processo leve e gates fortes onde existe risco.**
+O `ai-workflow-installer` resolve o problema de usar Codex em projetos sem contexto operacional confiável.
 
-## O Que Este Projeto Resolve
+Sem um método claro, o agente tende a trabalhar com contexto incompleto: não sabe o que está pronto, o que é stub, onde estão os riscos, quais padrões de frontend reutilizar, quais decisões já foram tomadas, quais comandos validar ou quando precisa parar para pedir aprovação humana.
 
-Projetos em andamento quase sempre têm o mesmo problema quando começam a usar IA:
+A skill cria uma base de trabalho para o Codex:
 
-- não existe `AGENTS.md`;
-- o contexto está espalhado em README, issues, código e cabeça das pessoas;
-- a IA não sabe o que está pronto, parcial ou stubado;
-- decisões arquiteturais ficam misturadas com changelog;
-- bugs escapados não viram aprendizado durável;
-- cada dev usa IA de um jeito diferente.
+- `AGENTS.md` curto como entrypoint;
+- contexto vivo do projeto;
+- matriz de risco;
+- papéis lógicos de agentes;
+- fluxo para pedidos vagos;
+- padrões premium de frontend;
+- reuso obrigatório de componentes, tokens e design system;
+- pesquisa para referências, APIs, scraping e problemas técnicos;
+- baseline de segurança;
+- gate de custo com aprovação humana;
+- validação visual/runtime;
+- sincronia de contexto para evitar decisões com docs desatualizadas;
+- evidências de validação antes de finalizar.
 
-O `ai-workflow-installer` cria uma base comum para resolver isso.
+A ideia central: o humano continua aprovando direção, custo e risco; o Codex ganha um processo claro para executar com mais consistência.
 
-## O Que Ele Instala
+## 2. Cenários De Projeto
 
-No assistente de IA usado pelo dev:
+### Projeto Sem Contexto De IA
 
-- uma skill chamada `ai-workflow-installer`;
-- comandos CLI para instalar e atualizar o workflow em qualquer repo;
-- suporte para times mistos usando Codex e Claude Code.
+Este é o caso em que o projeto não tem `AGENTS.md`, `AI_CONTEXT.md`, `FEATURE_STATUS.md`, `TECH_DEBT.md` ou documentação própria para orientar agentes.
 
-Dentro do projeto alvo:
+O que a skill faz:
+
+1. Detecta que o projeto ainda não tem workflow de IA.
+2. Inspeciona o repositório.
+3. Lê Markdown existente quando houver, como README e docs do projeto.
+4. Detecta stack, scripts, testes, Docker, CI/CD, migrations, docs e pontos de reuso frontend.
+5. Cria os arquivos base.
+6. Marca informações detectadas como `Fonte: repo`.
+7. Marca trechos vindos de Markdown existente com o caminho do arquivo de origem.
+8. Marca informações ausentes ou inferidas como `A confirmar`.
+9. Cria um processo inicial para o Codex trabalhar com triagem, risco, validação e evidência.
+
+### Projeto Com Contexto De IA Fora Do Padrão
+
+Este é o caso em que o projeto já tem alguma documentação, mas espalhada, duplicada, longa demais ou fora de um formato operacional. Exemplos:
+
+- `AGENTS.md` muito grande;
+- `CLAUDE.md` duplicando regras;
+- `PROJECT_MEMORY.md` misturando decisão, histórico e changelog;
+- `TECH_DEBT.md` sem impacto, contexto ou gatilho;
+- instruções antigas para Cursor, Copilot, Windsurf, Gemini ou Claude;
+- docs de IA sem matriz de risco, papéis, DoD ou gates.
+
+O que a skill faz:
+
+1. Detecta `migration` ou `update`.
+2. Lê os Markdown atuais antes de arquivar ou substituir.
+3. Extrai sinais de produto, usuários, objetivo, features, decisões, débitos, frontend, segurança, backend, DB e infra.
+4. Arquiva documentos antigos em `docs/archive/` antes de substituir.
+5. Mantém `AGENTS.md` como fonte canônica curta.
+6. Transforma `CLAUDE.md` em ponte de compatibilidade.
+7. Reorganiza memória, dívida técnica, decisões e contexto em arquivos próprios.
+8. Preserva histórico em vez de apagar conhecimento.
+9. Atualiza o projeto para o formato da skill.
+
+### Projeto Que Já Usa Esta Skill
+
+Quando o projeto já tem este workflow instalado, o instalador detecta `update`.
+
+O que a skill faz:
+
+1. Atualiza os documentos do kit.
+2. Arquiva versões anteriores antes de sobrescrever.
+3. Mantém o formato compatível com as melhorias mais recentes.
+4. Permite usar `--no-auto-force` quando você quiser apenas criar arquivos faltantes.
+
+## 3. Estrutura Criada No Projeto
+
+Ao rodar `ai-workflow .`, a skill cria ou atualiza esta estrutura dentro do projeto alvo:
 
 ```txt
 AGENTS.md
@@ -59,50 +111,76 @@ docs/
     EVIDENCIAS_E_VALIDACAO.md
     PADROES_DE_FALHA.md
   context/
+    produto.md
+    seguranca.md
+    frontend.md
+    backend.md
+    db.md
+    infra.md
   decisions/
+    README.md
   debt/
+    README.md
+    produto-integracoes.md
+    seguranca.md
+    infra-observabilidade.md
+    backend-db.md
+    frontend-ux.md
+    qualidade-testes.md
+    resolvidos.md
 ```
 
-## Como Funciona
+Principais arquivos:
 
-O fluxo padrão para projetos existentes é:
+- `AGENTS.md`: leitura inicial do Codex dentro do projeto.
+- `AI_CONTEXT.md`: contexto curto e sempre lido.
+- `FEATURE_STATUS.md`: mapa do que está pronto, parcial, stubado ou bloqueado.
+- `TECH_DEBT.md`: índice curto de dívida técnica.
+- `PROJECT_MEMORY.md`: índice de decisões históricas.
+- `docs/ia/`: método de trabalho dos agentes.
+- `docs/context/`: contexto por área.
+- `docs/decisions/`: ADRs.
+- `docs/debt/`: débitos detalhados.
 
-1. você roda `ai-workflow .` no projeto;
-2. o instalador identifica automaticamente se é instalação nova, onboarding de projeto existente, atualização ou migração;
-3. ele investiga o repositório;
-4. ele detecta stack, scripts, docs, CI/CD, Docker, testes, migrations, áreas sensíveis e pontos de reuso frontend;
-5. ele gera ou atualiza os documentos;
-6. docs antigas de IA são arquivadas antes de atualização/migração;
-7. tudo que veio do usuário fica marcado como `Fonte: brief`;
-8. tudo que veio do repo fica marcado como `Fonte: repo`;
-9. o modo de instalação fica marcado como `Fonte: detecção automática`;
-10. inferências e lacunas ficam marcadas como `A confirmar`;
-11. todo trabalho ganha triagem/intake leve para classificar risco, especialistas e evidências esperadas;
-12. quando a ferramenta suportar subagentes reais, o fluxo orienta autorização, divisão segura, brief e fan-in;
-13. pedidos vagos como "melhorar UX" viram descoberta, perguntas e plano aprovado antes de implementação;
-14. trabalhos de UI passam a seguir reuso obrigatório de componentes, tokens, layouts, design system oficial e padrões existentes;
-15. UI relevante exige validação visual/runtime quando viável, ou bloqueio/fallback explícito;
-16. pesquisa entra quando houver ambiguidade visual, API, scraping, dependência ou problema técnico desconhecido;
-17. segurança passa a ter baseline prático para auth, autorização, PII, secrets, APIs externas, uploads e dependências;
-18. contexto vivo evita decisão ruim quando docs estão antigas, genéricas ou contraditórias com o repo;
-19. entregas relevantes precisam registrar evidências de validação;
-20. se um design system externo no GitHub for necessário, o agente solicita link/branch/tag/versão, valida acesso com `gh` e nunca pede token no chat;
-21. se um design system externo não puder ser acessado, o agente informa o bloqueio e sugere uma ou duas formas de consumo;
-22. qualquer custo real ou potencial exige aprovação humana antes da implementação.
-
-Isso evita o pior erro possível: a IA fingir que sabe o que não sabe.
-
-## Instalação
-
-O pacote Python é o mesmo para todo mundo. Depois da instalação, cada dev registra a skill no assistente que usa: Codex, Claude Code ou os dois.
+## 4. Instalação E Uso Passo A Passo
 
 Pré-requisito: Python 3.11+.
 
-Instale `pipx`:
+### Windows
+
+Abra o PowerShell.
+
+Instale o `pipx`:
+
+```powershell
+py -m pip install --user pipx
+py -m pipx ensurepath
+```
+
+Feche e reabra o PowerShell.
+
+Instale o pacote:
+
+```powershell
+pipx install git+https://github.com/arthurlazzari93/ai-workflow-installer.git
+```
+
+Registre a skill no Codex:
+
+```powershell
+ai-skills install ai-workflow-installer
+```
+
+Abra uma nova sessão do Codex para a skill aparecer.
+
+### Linux
+
+Em Ubuntu/Debian/WSL, instale o `pipx` pelo gerenciador da distro. Não use `python3 -m pip install --user pipx`, porque versões recentes bloqueiam esse caminho com `externally-managed-environment`.
 
 ```bash
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+sudo apt update
+sudo apt install -y pipx python3-venv
+pipx ensurepath
 ```
 
 Feche e reabra o terminal.
@@ -113,19 +191,17 @@ Instale o pacote:
 pipx install git+https://github.com/arthurlazzari93/ai-workflow-installer.git
 ```
 
-### Para Devs Que Usam Codex
-
 Registre a skill no Codex:
 
 ```bash
 ai-skills install ai-workflow-installer
 ```
 
-Abra uma nova sessão do Codex para a skill aparecer no contexto.
+Abra uma nova sessão do Codex para a skill aparecer.
 
-### Para Devs Que Usam Claude Code
+### Opcional: Claude Code
 
-Registre a skill no Claude Code:
+Se o time também usa Claude Code:
 
 ```bash
 ai-skills install ai-workflow-installer --codex-home ~/.claude --force
@@ -133,46 +209,25 @@ ai-skills install ai-workflow-installer --codex-home ~/.claude --force
 
 Isso instala a skill em:
 
-```bash
+```txt
 ~/.claude/skills/ai-workflow-installer
 ```
 
-O parâmetro `--codex-home` é histórico: ele aponta para a pasta base onde a CLI deve criar `skills/`. Para Claude Code, essa pasta base é `~/.claude`.
+### Como Usar Depois Da Instalação
 
-Reinicie o Claude Code para a skill aparecer. Depois, você pode chamar a skill pelo nome ou pedir em linguagem natural:
-
-```txt
-Use a skill ai-workflow-installer para instalar o workflow de IA neste projeto.
-```
-
-### Para Devs Que Usam Codex E Claude Code
-
-Instale nos dois ambientes:
-
-```bash
-ai-skills install ai-workflow-installer
-ai-skills install ai-workflow-installer --codex-home ~/.claude --force
-```
-
-Reinicie os dois assistentes depois da instalação.
-
-## Uso Básico
-
-Dentro do projeto onde você quer aplicar o método:
+Entre no repositório do projeto:
 
 ```bash
 cd /caminho/do/projeto
+```
+
+Instale o workflow:
+
+```bash
 ai-workflow .
 ```
 
-O comando detecta automaticamente o modo:
-
-- `fresh`: projeto sem workflow de IA;
-- `existing-project onboarding`: projeto existente sem instruções de IA;
-- `update`: projeto já tem este kit;
-- `migration`: projeto tem docs antigas/customizadas de IA.
-
-Se você quiser enriquecer o contexto inicial com respostas humanas, use:
+Para enriquecer o contexto inicial com respostas humanas:
 
 ```bash
 ai-workflow . --interactive
@@ -187,141 +242,82 @@ O modo interativo pergunta:
 - o que não pode quebrar;
 - dores conhecidas.
 
-Depois disso, o instalador escaneia o repo e cria os documentos.
-
-## Projetos Que Já Têm Docs Antigos
-
-Se o projeto já tem `AGENTS.md`, `CLAUDE.md`, `PROJECT_MEMORY.md`, `TECH_DEBT.md` ou docs antigas de IA, use:
-
-```bash
-ai-workflow .
-```
-
-O instalador detecta `migration` ou `update` automaticamente. Arquivos existentes são arquivados antes de serem substituídos:
+Depois disso, abra o projeto no Codex e peça:
 
 ```txt
-docs/archive/
+Use a skill ai-workflow-installer neste projeto.
 ```
 
-Nada importante deve ser apagado sem cópia histórica.
+Ou trabalhe normalmente. O Codex passará a ler `AGENTS.md` e os documentos indicados conforme o tipo da tarefa.
 
-Para apenas criar arquivos faltantes sem atualizar docs existentes, use:
+## 5. Comandos
+
+### Workflow No Projeto
 
 ```bash
-ai-workflow . --no-auto-force
-```
-
-## Gerar Relatório De Descoberta
-
-Para revisar o que foi detectado:
-
-```bash
-ai-workflow . --interactive --discovery-report docs/ia/DISCOVERY_REPORT.md
-```
-
-Esse relatório ajuda o time a validar as inferências e substituir `A confirmar` por fatos reais.
-
-## Usar Brief Em Arquivo
-
-Você também pode passar um brief pronto:
-
-```bash
-ai-workflow . --brief-file brief.md
-```
-
-Modelo:
-
-```md
-## O que é o projeto
-
-## Quem usa
-
-## Objetivo atual
-
-## Áreas sensíveis
-
-## O que não pode quebrar
-
-## Dores conhecidas
-```
-
-JSON também funciona:
-
-```json
-{
-  "project": "Sistema interno de vendas",
-  "users": "Time comercial e gestores",
-  "current_goal": "Reduzir retrabalho no fluxo de propostas",
-  "sensitive_areas": "Dados de clientes, permissões e integrações de pagamento",
-  "must_not_break": "Login, geração de propostas e webhooks",
-  "known_pains": "Testes fracos e documentação desatualizada"
-}
-```
-
-## Comandos
-
-```bash
-# Instala workflow no repo atual
+# Instala ou atualiza o workflow no repo atual
 ai-workflow .
 
-# Instala workflow coletando brief humano
+# Instala coletando brief humano
 ai-workflow . --interactive
 
-# Migra/atualiza docs existentes automaticamente, arquivando versões anteriores
-ai-workflow .
+# Define nome do projeto manualmente
+ai-workflow . --project-name "Meu Produto"
 
-# Cria só arquivos ausentes, sem atualizar docs existentes
+# Cria apenas arquivos ausentes, sem atualizar docs existentes
 ai-workflow . --no-auto-force
 
-# Instala sem investigação automática
+# Instala sem investigação automática do repo
 ai-workflow . --no-discover
 
-# Gera relatório de descoberta
+# Não arquiva arquivos substituídos
+ai-workflow . --no-archive
+
+# Gera relatório de descoberta no stdout
+ai-workflow . --discovery-report
+
+# Gera relatório de descoberta em arquivo
 ai-workflow . --discovery-report docs/ia/DISCOVERY_REPORT.md
 
-# Lista skills instaladas no Codex
+# Usa brief em Markdown ou JSON
+ai-workflow . --brief-file brief.md
+ai-workflow . --brief-file brief.json
+```
+
+### Skill No Codex
+
+```bash
+# Lista skills instaladas
 ai-skills list
 
-# Instala ou atualiza a skill no Codex
-ai-skills install ai-workflow-installer --force
+# Instala a skill
+ai-skills install ai-workflow-installer
 
-# Instala ou atualiza a skill no Claude Code
-ai-skills install ai-workflow-installer --codex-home ~/.claude --force
+# Reinstala/atualiza a skill
+ai-skills install ai-workflow-installer --force
 
 # Mostra a pasta de skills do Codex
 ai-skills path
+```
 
-# Mostra a pasta de skills usada para o Claude Code
+### Skill No Claude Code
+
+```bash
+# Instala a skill no Claude Code
+ai-skills install ai-workflow-installer --codex-home ~/.claude --force
+
+# Mostra a pasta de skills usada para Claude Code
 ai-skills path --codex-home ~/.claude
 ```
 
-## Atualização
-
-Codex:
+### Atualização Do Pacote
 
 ```bash
 pipx upgrade ai-workflow-installer
 ai-skills install ai-workflow-installer --force
 ```
 
-Claude Code:
-
-```bash
-pipx upgrade ai-workflow-installer
-ai-skills install ai-workflow-installer --codex-home ~/.claude --force
-```
-
-Codex e Claude Code:
-
-```bash
-pipx upgrade ai-workflow-installer
-ai-skills install ai-workflow-installer --force
-ai-skills install ai-workflow-installer --codex-home ~/.claude --force
-```
-
-## Desinstalação
-
-Remover o pacote:
+### Desinstalação
 
 ```bash
 pipx uninstall ai-workflow-installer
@@ -333,69 +329,8 @@ Remover a skill do Codex manualmente:
 rm -rf ~/.codex/skills/ai-workflow-installer
 ```
 
-Se você usa `CODEX_HOME`, a pasta será:
-
-```bash
-$CODEX_HOME/skills/ai-workflow-installer
-```
-
 Remover a skill do Claude Code manualmente:
 
 ```bash
 rm -rf ~/.claude/skills/ai-workflow-installer
 ```
-
-## Filosofia
-
-Este kit segue algumas regras simples:
-
-- contexto curto vence documento gigante;
-- especialistas entram por risco, não por ritual;
-- decisões arquiteturais viram ADR;
-- entrega vira changelog;
-- estado atual vira feature status;
-- dívida técnica precisa de impacto, contexto e gatilho;
-- bug escapado precisa virar barreira durável;
-- pedido vago precisa virar plano aprovado antes de código;
-- frontend premium começa por reutilizar componentes, tokens e padrões existentes;
-- pesquisa transforma ambiguidade visual ou técnica em opções implementáveis;
-- custo real ou potencial exige aprovação humana explícita antes da implementação;
-- `CLAUDE.md` não deve duplicar `AGENTS.md`;
-- a IA deve marcar incerteza como `A confirmar`.
-
-## Estrutura Do Repositório
-
-```txt
-SKILL.md                         # skill do Codex
-agents/openai.yaml               # metadata da skill
-references/                      # referências carregadas sob demanda
-scripts/install_ai_workflow.py   # wrapper local para dev
-src/ai_workflow_installer/       # pacote Python e CLIs
-```
-
-## Desenvolvimento Local
-
-```bash
-git clone https://github.com/arthurlazzari93/ai-workflow-installer.git
-cd ai-workflow-installer
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-Validar a skill:
-
-```bash
-python /caminho/para/quick_validate.py .
-```
-
-Testar em um projeto temporário:
-
-```bash
-mkdir /tmp/ai-workflow-demo
-ai-workflow /tmp/ai-workflow-demo --project-name "Demo" --discovery-report /tmp/ai-workflow-demo/report.md
-```
-
-## Licença
-
-MIT.

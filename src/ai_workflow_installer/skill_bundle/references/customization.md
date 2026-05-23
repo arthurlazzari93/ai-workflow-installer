@@ -12,6 +12,8 @@ Use this reference after the base installer runs.
 - `TECH_DEBT.md` and `docs/debt/*`: real debt, impact, context, trigger.
 - `PROJECT_MEMORY.md` and `docs/decisions/*`: real ADR IDs and architecture decisions.
 
+The installer now seeds these files from existing Markdown when available. Keep useful synthesized lines, remove stale lines, and replace `A confirmar` with verified facts after human review.
+
 ## What Should Stay Mostly Generic
 
 - `docs/ia/MATRIZ_DE_RISCO.md`
