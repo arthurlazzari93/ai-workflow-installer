@@ -37,3 +37,7 @@ python scripts/install_ai_workflow.py /path/to/repo --discovery-report docs/ia/D
 
 Use the report to review generated context and replace `A confirmar` entries with verified facts.
 For frontend projects, use the frontend reuse section to confirm which components and visual tokens agents should reuse first.
+If the project uses an external design system, add its GitHub URL/package/version, branch/tag, public/private status, `gh` access notes and fallback snapshot path to `docs/context/frontend.md`.
+Confirm the dev server/runtime command for visual validation and add it to `docs/context/frontend.md` when discoverable.
+For security-sensitive projects, review `docs/context/seguranca.md` and `docs/ia/PADROES_SEGURANCA.md` to confirm auth, PII, secrets, external API, upload and dependency assumptions.
+For every project, confirm `docs/ia/TRIAGEM_E_INTAKE.md`, `docs/ia/SINCRONIA_DE_CONTEXTO.md`, `docs/ia/VALIDACAO_VISUAL_E_RUNTIME.md` and `docs/ia/EVIDENCIAS_E_VALIDACAO.md` match the team's desired rigor.

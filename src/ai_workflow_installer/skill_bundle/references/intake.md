@@ -40,3 +40,8 @@ python scripts/install_ai_workflow.py /path/to/repo --brief-file brief.json
 - User answers become `Fonte: brief`.
 - Repo inspection becomes `Fonte: repo`.
 - Anything inferred or missing must be marked `A confirmar`.
+
+## After Install
+
+Use `docs/ia/TRIAGEM_E_INTAKE.md` for task-level intake. The standard brief above is only for onboarding an existing project; day-to-day tasks should ask fewer questions and only when the answer changes scope, risk, acceptance, cost or implementation direction.
+Use `docs/ia/SINCRONIA_DE_CONTEXTO.md` when answers, docs and repo state disagree.

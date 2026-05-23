@@ -43,14 +43,20 @@ docs/
   ia/
     README.md
     MATRIZ_DE_RISCO.md
+    TRIAGEM_E_INTAKE.md
+    ORQUESTRACAO_DE_AGENTES.md
     PAPEIS_DOS_AGENTES.md
     POLITICA_DE_MODELOS.md
     FLUXOS.md
     DESCOBERTA_E_PLANEJAMENTO.md
     DEFINICAO_DE_PRONTO.md
     PADROES_FRONTEND.md
+    VALIDACAO_VISUAL_E_RUNTIME.md
     PESQUISA_E_REFERENCIAS.md
+    PADROES_SEGURANCA.md
+    SINCRONIA_DE_CONTEXTO.md
     CUSTO_E_APROVACAO.md
+    EVIDENCIAS_E_VALIDACAO.md
     PADROES_DE_FALHA.md
   context/
   decisions/
@@ -71,10 +77,18 @@ O fluxo padrão para projetos existentes é:
 8. tudo que veio do repo fica marcado como `Fonte: repo`;
 9. o modo de instalação fica marcado como `Fonte: detecção automática`;
 10. inferências e lacunas ficam marcadas como `A confirmar`;
-11. pedidos vagos como "melhorar UX" viram descoberta, perguntas e plano aprovado antes de implementação;
-12. trabalhos de UI passam a seguir reuso obrigatório de componentes, tokens, layouts e padrões existentes;
-13. pesquisa entra quando houver ambiguidade visual, API, scraping, dependência ou problema técnico desconhecido;
-14. qualquer custo real ou potencial exige aprovação humana antes da implementação.
+11. todo trabalho ganha triagem/intake leve para classificar risco, especialistas e evidências esperadas;
+12. quando a ferramenta suportar subagentes reais, o fluxo orienta autorização, divisão segura, brief e fan-in;
+13. pedidos vagos como "melhorar UX" viram descoberta, perguntas e plano aprovado antes de implementação;
+14. trabalhos de UI passam a seguir reuso obrigatório de componentes, tokens, layouts, design system oficial e padrões existentes;
+15. UI relevante exige validação visual/runtime quando viável, ou bloqueio/fallback explícito;
+16. pesquisa entra quando houver ambiguidade visual, API, scraping, dependência ou problema técnico desconhecido;
+17. segurança passa a ter baseline prático para auth, autorização, PII, secrets, APIs externas, uploads e dependências;
+18. contexto vivo evita decisão ruim quando docs estão antigas, genéricas ou contraditórias com o repo;
+19. entregas relevantes precisam registrar evidências de validação;
+20. se um design system externo no GitHub for necessário, o agente solicita link/branch/tag/versão, valida acesso com `gh` e nunca pede token no chat;
+21. se um design system externo não puder ser acessado, o agente informa o bloqueio e sugere uma ou duas formas de consumo;
+22. qualquer custo real ou potencial exige aprovação humana antes da implementação.
 
 Isso evita o pior erro possível: a IA fingir que sabe o que não sabe.
 

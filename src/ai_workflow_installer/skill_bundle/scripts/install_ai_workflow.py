@@ -520,11 +520,17 @@ Fonte canônica do método de trabalho com IA em **{project_name}**.
 2. Leia `FEATURE_STATUS.md` quando a tarefa tocar produto, UI, API ou comportamento existente.
 3. Leia `TECH_DEBT.md` quando houver risco de stub, simplificação, bug conhecido ou decisão de adiar algo.
 4. Leia contexto específico em `docs/context/` conforme a área afetada.
-5. Para frontend/UI, leia `docs/ia/PADROES_FRONTEND.md` e `docs/context/frontend.md` antes de implementar.
-6. Para pedido vago de melhoria, leia `docs/ia/DESCOBERTA_E_PLANEJAMENTO.md`, converse com o humano e aguarde aprovação antes de implementar.
-7. Para pesquisa externa, API, scraping, dependência ou solução desconhecida, leia `docs/ia/PESQUISA_E_REFERENCIAS.md`.
-8. Para qualquer custo real ou potencial, leia `docs/ia/CUSTO_E_APROVACAO.md` e aguarde aprovação humana.
-9. Leia ADRs em `docs/decisions/` somente quando a tarefa tocar uma decisão arquitetural.
+5. Leia `docs/ia/TRIAGEM_E_INTAKE.md` para classificar tarefa, risco, lacunas e evidências esperadas.
+6. Para frontend/UI, leia `docs/ia/PADROES_FRONTEND.md` e `docs/context/frontend.md` antes de implementar.
+7. Para pedido vago de melhoria, leia `docs/ia/DESCOBERTA_E_PLANEJAMENTO.md`, converse com o humano e aguarde aprovação antes de implementar.
+8. Para pesquisa externa, API, scraping, dependência ou solução desconhecida, leia `docs/ia/PESQUISA_E_REFERENCIAS.md`.
+9. Para segurança, privacidade, auth, dados sensíveis ou dependência externa, leia `docs/ia/PADROES_SEGURANCA.md`.
+10. Quando a ferramenta suportar agentes/subagentes reais e o humano autorizar, leia `docs/ia/ORQUESTRACAO_DE_AGENTES.md`.
+11. Para UI relevante, leia `docs/ia/VALIDACAO_VISUAL_E_RUNTIME.md` antes de finalizar.
+12. Antes de confiar em contexto antigo, leia `docs/ia/SINCRONIA_DE_CONTEXTO.md`.
+13. Para qualquer custo real ou potencial, leia `docs/ia/CUSTO_E_APROVACAO.md` e aguarde aprovação humana.
+14. Para fechar trabalho, leia `docs/ia/EVIDENCIAS_E_VALIDACAO.md`.
+15. Leia ADRs em `docs/decisions/` somente quando a tarefa tocar uma decisão arquitetural.
 
 Se `AI_CONTEXT.md`, `FEATURE_STATUS.md` ou `TECH_DEBT.md` não existirem, pare e avise.
 
@@ -559,6 +565,9 @@ Use `docs/ia/MATRIZ_DE_RISCO.md` como fonte detalhada.
 - Pedido vago de melhoria, UX, "deixar melhor" ou "modernizar": Agente De Descoberta antes de qualquer implementação.
 - UI relevante, tela nova ou componente compartilhado: Produto + Curador De UI + Design QA + Testador.
 - Ambiguidade visual, solução externa, API open source ou scraping: Agente de Pesquisa antes da implementação.
+- Subagentes reais/paralelos: somente quando a ferramenta suportar, a tarefa puder ser dividida sem conflito e houver autorização humana explícita.
+- Validação visual relevante: runtime/browser obrigatório quando viável; se ambiente não subir, registrar bloqueio e fallback.
+- Contexto desatualizado ou contraditório: Sincronia de Contexto antes de decidir.
 - Qualquer custo real ou potencial: Planejador De Custo + aprovação humana explícita.
 - Docker/CI/CD/deploy/env/secrets: Infra/SRE + Release.
 - Dependência nova: Arquiteto + Segurança quando runtime ou supply chain forem afetados.
@@ -580,8 +589,12 @@ Antes de finalizar:
 - diff sem mudança fora de escopo;
 - pedidos vagos transformados em plano aprovado antes de implementar;
 - verificações relevantes rodadas, ou motivo registrado;
+- evidências registradas para as afirmações de entrega;
+- contexto consultado foi considerado atual ou a divergência foi registrada;
+- validação visual/runtime feita em UI relevante, ou bloqueio/fallback registrado;
 - estados loading/empty/error considerados em UI;
 - reuso de componentes/tokens/padrões existentes considerado em UI;
+- baseline de segurança verificado quando tocar auth, dados, secrets, API externa, upload ou dependência;
 - custo real ou potencial aprovado pelo humano antes da implementação;
 - validação/auth/audit considerados em API sensível;
 - ADR, `FEATURE_STATUS.md`, `TECH_DEBT.md` ou `CHANGELOG.md` atualizados quando houver decisão, status, débito ou entrega relevante.
@@ -665,6 +678,12 @@ Contexto curto e sempre lido do projeto **{project_name}**.
 ## Anti-Patterns Iniciais
 
 {bullet(anti_patterns)}
+
+## Frescor Do Contexto
+
+- Gerado na instalação do workflow.
+- Conferir contra código/configs antes de decisões relevantes.
+- Se algo divergir, seguir `docs/ia/SINCRONIA_DE_CONTEXTO.md`.
 """
 
 
@@ -711,6 +730,11 @@ Mapa operacional do que existe, o que está parcial e o que ainda é stub.
 ## A Confirmar
 
 {bullet(confirm)}
+
+## Frescor Do Status
+
+- Revisar após mudança relevante de produto, UI, API, DB, infra ou fluxo.
+- Não assumir que feature está pronta sem conferir código/teste/rota relacionada.
 """
 
 
@@ -774,15 +798,21 @@ Esta pasta guarda o método de trabalho com agentes de IA. `AGENTS.md` continua 
 ## Ordem De Leitura
 
 1. `AI_CONTEXT.md`
-2. `MATRIZ_DE_RISCO.md`
-3. `PAPEIS_DOS_AGENTES.md`
-4. `FLUXOS.md`
-5. `DESCOBERTA_E_PLANEJAMENTO.md` quando o pedido for vago ou subjetivo
-6. `PADROES_FRONTEND.md` quando tocar UI/frontend
-7. `PESQUISA_E_REFERENCIAS.md` quando houver ambiguidade, API, scraping, dependência ou solução externa
-8. `CUSTO_E_APROVACAO.md` quando houver custo real ou potencial
-9. `DEFINICAO_DE_PRONTO.md`
-10. `PADROES_DE_FALHA.md`
+2. `TRIAGEM_E_INTAKE.md`
+3. `MATRIZ_DE_RISCO.md`
+4. `PAPEIS_DOS_AGENTES.md`
+5. `FLUXOS.md`
+6. `DESCOBERTA_E_PLANEJAMENTO.md` quando o pedido for vago ou subjetivo
+7. `PADROES_FRONTEND.md` quando tocar UI/frontend
+8. `PESQUISA_E_REFERENCIAS.md` quando houver ambiguidade, API, scraping, dependência ou solução externa
+9. `PADROES_SEGURANCA.md` quando tocar auth, dados, secrets, dependências, APIs externas ou uploads
+10. `ORQUESTRACAO_DE_AGENTES.md` quando houver subagentes reais, paralelismo ou delegação
+11. `VALIDACAO_VISUAL_E_RUNTIME.md` quando tocar UI relevante
+12. `SINCRONIA_DE_CONTEXTO.md` quando o contexto puder estar desatualizado
+13. `CUSTO_E_APROVACAO.md` quando houver custo real ou potencial
+14. `EVIDENCIAS_E_VALIDACAO.md`
+15. `DEFINICAO_DE_PRONTO.md`
+16. `PADROES_DE_FALHA.md`
 
 O processo deve acionar especialistas por risco e área afetada, não por ritual fixo.
 """,
@@ -813,10 +843,68 @@ Produção quebrada, vazamento, cobrança duplicada, login/API fora ou erro 500 
 
 Fluxo: Orquestrador -> Leitor -> Dev -> Revisor -> Testador. Depois do hotfix, registrar débito residual e padrão de falha.
 """,
+    "TRIAGEM_E_INTAKE.md": """# Triagem E Intake
+
+Todo trabalho começa por triagem leve. O objetivo é sair do pedido bruto para um plano executável sem transformar descoberta em burocracia.
+
+## Regra Central
+
+- Descobrir no repositório tudo que puder ser descoberto lendo código, docs, rotas, testes e padrões existentes.
+- Perguntar ao humano somente quando a resposta mudar escopo, risco, critério de aceite, custo, comportamento de produto ou decisão visual.
+- Não implementar quando a tarefa estiver vaga, custosa ou arriscada demais para execução direta.
+
+## Classificação Inicial
+
+Antes de editar arquivos, registrar mentalmente ou no resumo de trabalho:
+
+- tipo da tarefa: bugfix, UI, API, DB, infra, segurança, docs, pesquisa, planejamento ou processo;
+- objetivo e critério de aceite;
+- risco: baixo, médio, alto ou emergência;
+- áreas e arquivos prováveis;
+- especialistas obrigatórios;
+- lacunas que precisam de pergunta humana;
+- evidências esperadas para provar a entrega.
+
+## Quando Perguntar
+
+Pergunte quando faltar:
+
+- resultado esperado ou critério de aceite;
+- público, jornada ou prioridade de uma mudança de produto/UX;
+- autorização para custo real ou potencial;
+- decisão entre alternativas com trade-off real;
+- permissão para mexer em área sensível;
+- confirmação de comportamento que o código não revela.
+
+Evite perguntar sobre stack, comandos, estrutura, padrões de componente, testes ou rotas quando isso puder ser lido no projeto.
+
+## Roteamento
+
+- Pedido vago ou subjetivo: acionar `DESCOBERTA_E_PLANEJAMENTO.md`.
+- UI/frontend: acionar `PADROES_FRONTEND.md` e `docs/context/frontend.md`.
+- UI relevante: acionar `VALIDACAO_VISUAL_E_RUNTIME.md` antes de finalizar.
+- API externa, scraping, biblioteca ou problema desconhecido: acionar `PESQUISA_E_REFERENCIAS.md`.
+- Auth, dados, secrets, upload, dependência ou integração externa: acionar `PADROES_SEGURANCA.md`.
+- Contexto antigo, genérico ou divergente: acionar `SINCRONIA_DE_CONTEXTO.md`.
+- Subagentes reais/paralelos: acionar `ORQUESTRACAO_DE_AGENTES.md` e pedir autorização quando necessário.
+- Custo real ou potencial: acionar `CUSTO_E_APROVACAO.md` antes de implementar.
+- Qualquer entrega relevante: fechar com `EVIDENCIAS_E_VALIDACAO.md`.
+
+## Saída Esperada
+
+Para tarefas simples, a triagem pode ficar implícita no plano curto do agente. Para tarefas médias/altas, devolver ou manter claro:
+
+- entendimento do pedido;
+- plano de execução;
+- riscos e gates;
+- perguntas indispensáveis;
+- validações que serão feitas;
+- ponto onde aprovação humana é necessária.
+""",
     "PAPEIS_DOS_AGENTES.md": """# Papéis Dos Agentes
 
-- Orquestrador: classifica risco, escolhe especialistas, define critérios de aceite, não implementa.
-- Leitor: mapeia código existente e padrões locais.
+- Orquestrador: classifica tipo, risco, lacunas, especialistas, possibilidade de subagentes reais e evidências esperadas; não implementa.
+- Leitor: mapeia código existente, contratos, comandos, testes e padrões locais.
 - Agente De Descoberta: entra quando o pedido humano é vago, lê o produto/tela/código, conversa para clarificar intenção, aciona Pesquisa quando útil e retorna opções de implementação para aprovação.
 - Produto/PM: valida valor, escopo, experiência, copy, consentimento e trade-offs.
 - Agente de Pesquisa: busca referências visuais, docs oficiais, APIs open source, exemplos de mercado e soluções técnicas quando há ambiguidade ou dependência externa.
@@ -827,12 +915,76 @@ Fluxo: Orquestrador -> Leitor -> Dev -> Revisor -> Testador. Depois do hotfix, r
 - Dev API: implementa rotas, services, validação, jobs e contratos.
 - Dev DB: cuida de schema, migrations, índices, constraints, seed e ownership/RLS.
 - Dev Infra/SRE: cuida de Docker, CI/CD, deploy, observabilidade, backups e healthchecks.
-- Design QA: verifica fidelidade visual, consistência com componentes existentes, responsividade, acessibilidade e overlap.
-- Segurança/Privacidade: verifica auth, PII, secrets, autorização, logs e privacidade/legal.
-- Testador: verifica golden path, edge e erro sem enfraquecer testes.
-- Revisor Código: revisa diff, async, tipos, imports, edge cases e escopo.
+- Design QA: verifica fidelidade visual, consistência com componentes existentes, responsividade, acessibilidade, estados e overlap.
+- Segurança/Privacidade: aplica baseline de segurança para auth, autorização, PII, secrets, logs, dependências, APIs externas e privacidade/legal.
+- Testador: verifica golden path, edge, erro, regressões relevantes, runtime visual quando aplicável e evidências de validação.
+- Revisor Código: revisa diff, async, tipos, imports, edge cases, escopo, duplicação e aderência aos padrões.
 - Documentação: atualiza contexto, ADRs, status, debt e changelog quando aplicável.
 - Release Manager: gerencia PR, deploy, rollback e validação pós-deploy.
+""",
+    "ORQUESTRACAO_DE_AGENTES.md": """# Orquestração De Agentes
+
+Esta skill define papéis lógicos. Ela não cria agentes reais sozinha em toda ferramenta. Quando a ferramenta suportar subagentes reais e o humano autorizar, o Orquestrador pode delegar trabalho paralelo com controle explícito.
+
+## Regra Central
+
+- Usar subagentes reais somente quando houver benefício claro de paralelismo, pesquisa independente, revisão isolada ou implementação em áreas sem conflito.
+- Não delegar trabalho bloqueante se o próximo passo depende diretamente dele.
+- Não criar subagentes quando a ferramenta, permissão ou política atual não permitir.
+- Se subagente real não estiver disponível, executar os papéis em sequência no mesmo agente e registrar a limitação.
+
+## Quando Pedir Autorização
+
+Peça autorização humana antes de acionar subagentes reais quando:
+
+- a ferramenta exigir permissão explícita;
+- houver risco de edição paralela nos mesmos arquivos;
+- o trabalho puder consumir recursos pagos;
+- a delegação depender de acesso externo, GitHub privado, APIs ou credenciais;
+- o resultado precisar ser integrado no mesmo diff.
+
+## Divisão Segura
+
+Delegue apenas tarefas com escopo claro:
+
+- Pesquisa: fontes, APIs, referência visual, docs oficiais, benchmarking.
+- Curadoria de UI: mapear componentes, tokens, telas parecidas e padrões locais.
+- Design QA: revisar screenshots, responsividade, overlap, estados e consistência.
+- Testes: rodar validações, investigar falhas, propor cobertura.
+- Implementação: somente quando cada agente tiver arquivos/módulos próprios e não conflitantes.
+
+## Brief Para Subagente
+
+```md
+Papel:
+
+Objetivo:
+
+Arquivos/áreas sob sua responsabilidade:
+
+Arquivos que você não deve alterar:
+
+Contexto mínimo:
+
+Critérios de aceite:
+
+Evidência esperada:
+
+Ao finalizar, retorne:
+- resumo;
+- arquivos alterados ou analisados;
+- validações;
+- riscos e dúvidas.
+```
+
+## Fan-In
+
+Antes de finalizar:
+
+- integrar resultados sem sobrescrever trabalho de outro agente;
+- revisar conflitos de escopo;
+- confirmar evidências;
+- registrar limitações quando algum papel foi executado sequencialmente por falta de subagente real.
 """,
     "POLITICA_DE_MODELOS.md": """# Política De Modelos
 
@@ -854,13 +1006,31 @@ Se o modelo extremo não estiver disponível, registrar modelo pretendido, model
 """,
     "FLUXOS.md": """# Fluxos
 
+## Todo Trabalho
+
+Orquestrador -> Triagem e intake -> especialistas conforme risco -> implementação -> validação/evidências -> revisão.
+
+Triagem deve identificar objetivo, critério de aceite, risco, áreas afetadas, gates, custo potencial e evidências esperadas. Se faltar informação que muda escopo ou aprovação, pare para perguntar.
+
+Antes de confiar em contexto antigo, acionar `SINCRONIA_DE_CONTEXTO.md` quando houver divergência, `A confirmar`, docs genéricas ou mudança recente no repo.
+
+## Subagentes Reais Quando Suportado
+
+Orquestrador -> autorização humana quando necessária -> briefs independentes -> agentes/subagentes -> fan-in -> revisão integrada.
+
+Usar `ORQUESTRACAO_DE_AGENTES.md`. Se a ferramenta não suportar subagentes reais, executar os papéis em sequência e registrar essa limitação.
+
 ## Bugfix Local
 
 Orquestrador -> Leitor leve -> Dev da área -> Revisor -> verificação mínima.
 
 ## UI Relevante
 
-Orquestrador -> Produto -> Agente de Pesquisa se houver ambiguidade visual ou referência externa -> Curador De UI -> Dev Frontend/Mobile -> Design QA -> Testador -> Revisor.
+Orquestrador -> Produto -> Agente de Pesquisa se houver ambiguidade visual ou referência externa -> Curador De UI -> contrato de UX -> Dev Frontend/Mobile -> Design QA -> Testador -> Revisor.
+
+O contrato de UX deve registrar tarefa principal, público, padrão visual escolhido, componentes/tokens reutilizados, estados obrigatórios e evidência visual esperada.
+
+Antes de finalizar UI relevante, executar `VALIDACAO_VISUAL_E_RUNTIME.md`: subir runtime quando viável, validar navegador/viewport/estados, ou registrar bloqueio e fallback.
 
 ## Pedido Vago De Melhoria
 
@@ -886,6 +1056,12 @@ Orquestrador -> Planejador De Custo -> aprovação humana explícita -> Dev da �
 
 Orquestrador -> Leitor -> Dev API -> Testador -> Revisor. Incluir Arquiteto se contrato público mudar.
 
+## Segurança Ou Privacidade
+
+Orquestrador -> Segurança/Privacidade -> Arquiteto/Produto quando houver trade-off -> Dev da área -> Testador -> Revisor.
+
+Aplicar baseline de `PADROES_SEGURANCA.md` sempre que tocar auth, autorização, dados pessoais, secrets, upload, webhook, API externa, dependência, logs ou cobrança.
+
 ## DB Ou Schema
 
 Orquestrador -> Arquiteto -> Dev DB -> Dev API se necessário -> Testador -> Revisor.
@@ -897,26 +1073,36 @@ Orquestrador -> Checkpoint -> Produto -> Arquiteto -> Segurança/Privacidade -> 
 ## Infra, CI/CD Ou Deploy
 
 Orquestrador -> Infra/SRE -> Release -> Testador smoke -> Revisor.
+
+## Fechamento Com Evidências
+
+Antes de finalizar, o agente deve declarar o que mudou, quais validações foram feitas, quais evidências sustentam a entrega e qual risco residual permaneceu.
 """,
     "DEFINICAO_DE_PRONTO.md": """# Definição De Pronto
 
 ## Toda Mudança
 
 - Critérios de aceite conferidos.
+- Triagem feita: tipo, risco, área, lacunas, gates e evidências esperadas.
 - Pedido vago, subjetivo ou amplo foi clarificado e aprovado antes da implementação.
+- Contexto vivo conferido quando havia `A confirmar`, divergência ou docs antigas.
+- Subagentes reais, quando usados, tiveram brief, escopo de arquivos e fan-in registrados.
 - Sem mudança fora de escopo.
 - Sem TODO/stub novo sem debt.
 - Verificações relevantes rodadas, ou motivo registrado.
+- Evidências registradas para as afirmações principais da entrega.
 - Documentação viva atualizada somente quando houver decisão, status, débito ou entrega relevante.
 
 ## UI
 
 - Estados loading, empty, error e populated considerados.
 - Componentes, telas parecidas, tokens, estilos e hooks existentes foram procurados antes de criar UI nova.
+- Contrato de UX considerado: tarefa principal, público, padrão local, estados e restrições.
 - Componente novo tem motivo claro: falta de equivalente, variação legítima ou abstração reutilizável.
 - Copy combina com idioma/tom do projeto.
 - Sem violar tokens/design system quando houver.
 - Sem overlap incoerente.
+- Evidência visual/runtime feita quando a mudança visual for relevante, ou bloqueio/fallback registrado.
 
 ## API/DB
 
@@ -928,8 +1114,10 @@ Orquestrador -> Infra/SRE -> Release -> Testador smoke -> Revisor.
 ## Segurança/Privacidade
 
 - Endpoints sensíveis exigem auth.
+- Autorização checada no servidor, não apenas no cliente.
 - PII não vaza por logs, push payloads, respostas públicas ou screenshots.
 - Secrets não entram em commit.
+- Dependências, APIs externas, uploads e integrações passam pelo baseline de `PADROES_SEGURANCA.md`.
 
 ## Custo
 
@@ -952,6 +1140,8 @@ Use este fluxo quando o pedido humano for vago, subjetivo ou amplo demais para i
 - Ler o que a tela, fluxo ou módulo faz hoje usando código, docs, rotas, screenshots ou contexto disponível.
 - Explicar de forma curta o entendimento atual e as lacunas.
 - Fazer poucas perguntas de alto impacto para transformar pedido genérico em objetivo implementável.
+- Perguntar uma a três coisas por vez, priorizando respostas que mudam direção, risco, custo ou aceite.
+- Evitar perguntar o que pode ser descoberto no repositório.
 - Acionar Agente de Pesquisa quando referências, benchmark, padrão de UX ou solução técnica externa puderem ajudar.
 - Acionar Curador De UI quando o assunto tocar frontend para mapear componentes e padrões existentes.
 - Acionar Planejador De Custo se qualquer opção tiver custo real ou potencial.
@@ -971,10 +1161,28 @@ Use este fluxo quando o pedido humano for vago, subjetivo ou amplo demais para i
 Antes de implementar, devolver ao humano:
 
 - entendimento da tela/fluxo atual;
-- 2 ou 3 opções de melhoria, com impacto e esforço relativo;
+- problema provável e tarefa principal do usuário;
+- 2 ou 3 opções de melhoria, com impacto, esforço relativo e evidência necessária;
 - riscos, dependências e custo quando houver;
 - recomendação objetiva;
 - pergunta final pedindo aprovação da opção escolhida.
+
+## Formato Sugerido
+
+```md
+Entendimento:
+- ...
+
+Opções:
+1. ...
+2. ...
+3. ...
+
+Recomendação:
+- ...
+
+Preciso da sua aprovação para implementar a opção N.
+```
 
 ## Regra De Bloqueio
 
@@ -992,6 +1200,33 @@ O objetivo é entregar UI premium sem fragmentar o produto. Reuso vem antes de c
 - Identificar estados obrigatórios: loading, empty, error, populated, disabled e permissões quando aplicável.
 - Acionar Agente de Pesquisa quando a intenção visual estiver ambígua, faltar referência ou houver padrão de mercado relevante.
 - Acionar Planejador De Custo antes de usar asset, serviço, API, biblioteca ou ferramenta com cobrança real ou potencial.
+
+## Design System Externo
+
+Se o projeto declarar um design system oficial por link, pacote ou repositório:
+
+- Tratar essa fonte como referência prioritária depois dos componentes locais já existentes no projeto.
+- Consultar tokens, componentes, layouts, exemplos e regras de acessibilidade antes de criar UI nova.
+- Registrar a versão, branch, tag, pacote ou data de consulta quando a decisão depender dessa fonte.
+- Se a fonte ainda não estiver registrada, pedir ao humano: link do GitHub/repositório, branch/tag/versão, se é público ou privado, pacote oficial quando existir e prioridade entre design system externo e padrões locais.
+- Quando o design system estiver no GitHub, validar acesso com `gh auth status` e leitura do repositório com `gh repo view ORG/REPO` ou comando equivalente.
+- Se `gh` não estiver autenticado ou autorizado, não pedir token/credencial no chat. Orientar o humano a autenticar com `gh auth login`, liberar acesso ao repositório, instalar o pacote oficial, anexar um snapshot dos docs/tokens/componentes ou copiar um recorte mínimo para `docs/context/frontend.md`.
+- Depois de acessar, registrar em `docs/context/frontend.md`: URL, branch/tag/versão, pacote, forma de consumo, prioridade, fallback e data de validação.
+- Sem acesso ao design system externo, não inventar divergência visual; usar padrões locais detectados e marcar a lacuna como `A confirmar`.
+
+## Contrato De UX
+
+Antes de codar UI relevante, o agente deve ter clareza sobre:
+
+- tarefa principal do usuário na tela;
+- público e frequência de uso;
+- problema que a mudança resolve: clareza, velocidade, confiança, conversão, estética, acessibilidade ou erro;
+- tela, componente ou padrão local que será usado como referência;
+- componentes, tokens, estilos, hooks e estados que serão reaproveitados;
+- restrições: o que não pode mudar;
+- evidência esperada: screenshot, validação no navegador, teste ou checklist.
+
+Se algum item mudar a direção da implementação e não puder ser descoberto no projeto, volte para `DESCOBERTA_E_PLANEJAMENTO.md`.
 
 ## Reuso Obrigatório
 
@@ -1036,10 +1271,60 @@ Registre no resumo da entrega o motivo da criação e onde o componente deve ser
 
 ## Validação
 
+- Seguir `VALIDACAO_VISUAL_E_RUNTIME.md` para mudança visual relevante.
 - Validar no navegador quando houver mudança visual relevante.
 - Conferir desktop e mobile quando a UI for responsiva.
 - Testar golden path, estados loading/empty/error e pelo menos um erro realista.
+- Registrar componentes/tokens reutilizados ou justificar componente novo.
 - Revisor Código confirma que não houve duplicação desnecessária nem quebra de padrão visual.
+""",
+    "VALIDACAO_VISUAL_E_RUNTIME.md": """# Validação Visual E Runtime
+
+Mudança visual relevante precisa ser validada no produto rodando quando isso for viável. Se o ambiente não subir, o agente não deve fingir validação: deve registrar o bloqueio e usar fallback proporcional.
+
+## Antes De Validar
+
+- Descobrir comando de dev/build/test em `AI_CONTEXT.md`, `package.json`, `pyproject.toml` ou docs do projeto.
+- Verificar se dependências já estão instaladas.
+- Não instalar dependências, subir serviço pago, criar infra ou consumir API paga sem aprovação humana quando houver custo real ou potencial.
+- Identificar rota/tela, viewport desktop e mobile, estado de dados e login necessário.
+
+## Fluxo Preferido
+
+1. Rodar typecheck/lint/test relevante quando existir.
+2. Subir servidor local com comando do projeto.
+3. Abrir a rota no navegador.
+4. Validar desktop e mobile quando responsivo.
+5. Verificar console, loading, empty, error, disabled e populated quando aplicável.
+6. Capturar evidência: screenshot, observação objetiva ou log de validação.
+
+## Quando O Runtime Não Sobe
+
+Registrar:
+
+- comando tentado;
+- erro principal;
+- hipótese provável;
+- se falta dependência, env, banco, seed, login, segredo, serviço externo ou porta;
+- o que seria necessário para desbloquear;
+- fallback usado.
+
+Fallbacks aceitáveis:
+
+- build/typecheck/lint/test;
+- inspeção de componentes e estilos;
+- Storybook ou preview isolado quando existir;
+- screenshot de estado estático se a ferramenta permitir;
+- checklist manual com risco residual explícito.
+
+## Evidência Mínima Para UI
+
+- Rota/tela validada.
+- Viewports usadas.
+- Estados verificados.
+- Componentes/tokens reutilizados.
+- Problemas visuais encontrados ou confirmação de ausência de overlap/texto estourado.
+- Limitações de ambiente.
 """,
     "PESQUISA_E_REFERENCIAS.md": """# Pesquisa E Referências
 
@@ -1057,10 +1342,26 @@ Use pesquisa para reduzir incerteza antes da implementação, não para justific
 ## Como Pesquisar
 
 - Priorizar documentação oficial, repositórios mantidos, exemplos do próprio projeto e fontes primárias.
+- Verificar data, versão, licença, manutenção e sinais de abandono quando a decisão depender de fonte externa.
 - Para frontend, coletar padrões concretos: layout, comportamento, estados, hierarquia visual e restrições.
+- Para design system externo no GitHub ou pacote versionado, tentar consumir docs, tokens, componentes e exemplos antes de propor UI nova.
+- Quando o design system estiver no GitHub, solicitar link/branch/tag/versão ao humano se isso ainda não estiver documentado e validar acesso com `gh auth status` e `gh repo view ORG/REPO` ou equivalente.
 - Para API/scraping, verificar termos de uso, autenticação, rate limits, paginação, estabilidade e custo.
 - Separar fato verificado de inferência.
 - Registrar links, data de consulta quando relevante e recomendação objetiva.
+
+## Fonte Externa Inacessível
+
+Se o agente não conseguir acessar ou consumir uma fonte externa necessária, ele deve informar o humano com objetividade:
+
+- qual fonte falhou;
+- por que ela é necessária;
+- o que foi tentado;
+- uma ou duas formas de desbloquear, por exemplo autenticar com `gh auth login`, liberar permissão/acesso ao GitHub, instalar o pacote oficial, anexar um export/snapshot ou copiar os tokens/componentes mínimos para o repositório.
+
+O agente não deve pedir token ou credencial no chat. Credenciais precisam passar por fluxo seguro da ferramenta, CLI, secret manager ou canal aprovado pelo projeto.
+
+Enquanto a fonte estiver inacessível, o agente pode seguir apenas com padrões locais já verificados ou aguardar o desbloqueio quando a decisão depender da fonte.
 
 ## Entrega Para Frontend
 
@@ -1068,6 +1369,7 @@ O Agente de Pesquisa deve transformar ambiguidade em opções implementáveis:
 
 - 2 ou 3 direções visuais concretas quando houver escolha de UX.
 - referências de interação, não apenas estética;
+- relação entre a referência externa e componentes/padrões já existentes no projeto;
 - riscos de acessibilidade, responsividade ou performance;
 - recomendação alinhada ao produto e aos componentes existentes.
 
@@ -1107,7 +1409,206 @@ A aprovação precisa citar o item aprovado e o limite conhecido, por exemplo:
 Aprovado usar API X para o fluxo Y, até o plano gratuito / até R$ N por mês / apenas em ambiente de teste.
 ```
 
-Sem aprovação, o agente deve propor alternativa sem custo ou parar a implementação.
+Silêncio, aprovação genérica ou plano gratuito sem limite claro não contam como aprovação para custo real. Sem aprovação, o agente deve propor alternativa sem custo ou parar a implementação.
+""",
+    "SINCRONIA_DE_CONTEXTO.md": """# Sincronia De Contexto
+
+Contexto desatualizado gera decisão ruim. Antes de confiar em docs antigas, o agente deve checar se o repositório confirma o que está escrito.
+
+## Regra Central
+
+- Código, testes, configs e manifests atuais têm prioridade sobre contexto antigo.
+- Docs de contexto orientam, mas não substituem inspeção do repo quando a tarefa toca comportamento real.
+- Se houver divergência entre docs e código, registrar a divergência e usar o código como fonte operacional até o humano confirmar.
+
+## Quando Acionar
+
+- `AI_CONTEXT.md`, `FEATURE_STATUS.md`, `TECH_DEBT.md` ou `docs/context/*` parecem genéricos, antigos ou contraditórios.
+- A tarefa toca área marcada como `A confirmar`.
+- O repo mudou desde a última atualização de contexto.
+- O agente encontra stub, TODO, comportamento parcial ou comando que não bate com a documentação.
+- O pedido humano depende de estado atual de produto, tela, API, DB, infra ou feature.
+
+## Checklist De Frescor
+
+- Ler `git status --short` para entender mudanças locais antes de editar.
+- Conferir manifests e scripts atuais.
+- Conferir arquivos diretamente afetados.
+- Conferir testes ou rotas relacionadas.
+- Conferir `FEATURE_STATUS.md` antes de assumir que algo está pronto.
+- Conferir `TECH_DEBT.md` antes de mexer em área com débito conhecido.
+- Conferir `docs/context/frontend.md` antes de UI e `docs/context/seguranca.md` antes de área sensível.
+
+## Como Atualizar
+
+Atualize contexto somente quando a mudança for real e útil para próximas sessões:
+
+- `AI_CONTEXT.md`: stack, comandos, arquitetura, áreas sensíveis.
+- `FEATURE_STATUS.md`: pronto, parcial, stub, bloqueado.
+- `TECH_DEBT.md` e `docs/debt/*`: débito aceito, impacto, gatilho.
+- `docs/context/*`: padrões locais, design system, validação, auth, DB, infra.
+- `docs/decisions/*`: decisão arquitetural durável.
+
+Não transformar todo diff em documentação. Atualize apenas quando o contexto futuro ficaria errado sem isso.
+
+## Saída Esperada
+
+Quando houver divergência:
+
+```md
+Contexto divergente:
+- doc dizia: ...
+- repo mostrou: ...
+- decisão operacional: ...
+- atualização feita/pendente: ...
+```
+""",
+    "EVIDENCIAS_E_VALIDACAO.md": """# Evidências E Validação
+
+Toda entrega precisa de evidência proporcional ao risco. O agente deve provar as afirmações principais antes de finalizar.
+
+## Regra Central
+
+- Não afirmar que algo funciona sem validação ou motivo claro para não validar.
+- Preferir evidência executada no projeto: teste, typecheck, lint, build, screenshot, navegador, log de comando ou revisão de diff.
+- Se não puder validar, registrar o bloqueio e o risco residual.
+
+## Matriz De Evidência
+
+### UI / Frontend
+
+- Navegador aberto quando houver mudança visual relevante.
+- Runtime local iniciado quando viável; se não subir, registrar comando, erro, bloqueio e fallback.
+- Desktop e mobile quando a tela for responsiva.
+- Golden path e estados loading, empty, error, disabled e populated quando aplicável.
+- Evidência de reuso: componentes, tokens, telas parecidas ou justificativa para componente novo.
+- Sem overlap, texto estourado ou layout shift incoerente.
+
+### API / Regra De Negócio
+
+- Teste automatizado quando houver lógica nova ou correção de bug.
+- Smoke/manual documentado quando teste automatizado não for viável.
+- Entrada inválida, não autorizado e caso de sucesso considerados.
+- Contrato de resposta/erro preservado ou mudança documentada.
+
+### DB / Migration
+
+- Migration, rollback ou plano de reversão considerado.
+- Índices, constraints, ownership/RLS e impacto em dados existentes avaliados quando aplicável.
+- Seed/dados de teste ajustados quando necessário.
+
+### Segurança / Privacidade
+
+- Auth e autorização verificadas em endpoints ou telas sensíveis.
+- PII, tokens, secrets e dados privados não aparecem em logs, console, screenshots ou respostas públicas.
+- Dependência, API externa, upload ou scraping passam pelo baseline de `PADROES_SEGURANCA.md`.
+
+### Infra / Dependências
+
+- Build, CI, Docker, env e rollback considerados quando forem afetados.
+- Licença, manutenção, segurança e custo avaliados para dependência nova.
+
+### Docs / Processo
+
+- `AGENTS.md` continua curto.
+- Docs detalhados ficam em `docs/ia/` ou `docs/context/`.
+- Decisões, débitos e status são atualizados somente quando houver mudança real.
+- Contexto antigo foi conferido contra código/configs quando a tarefa dependia dele.
+- Delegações/subagentes, quando usados, têm brief e fan-in claros.
+
+## Cartão De Resultado
+
+Use este formato no fechamento de tarefas médias ou altas:
+
+```md
+Resultado:
+- ...
+
+Evidências:
+- ...
+
+Riscos residuais:
+- ...
+
+Custo:
+- nenhum / aprovado por ...
+
+Próximos passos:
+- ...
+```
+""",
+    "PADROES_SEGURANCA.md": """# Padrões De Segurança
+
+Este é o baseline prático para tarefas que tocam segurança, privacidade, dados, autenticação, autorização, dependências, uploads, scraping ou integrações externas.
+
+## Regra Central
+
+- Segurança relevante é risco alto.
+- Não confiar no frontend para proteger dado ou ação.
+- Não expor segredo, token, dado pessoal ou informação interna em log, erro, console, screenshot ou resposta pública.
+- Qualquer custo, API externa, serviço pago ou dependência comercial também passa por `CUSTO_E_APROVACAO.md`.
+
+## Auth E Autorização
+
+- Endpoint sensível exige autenticação.
+- Autorização deve ser checada no servidor para o recurso específico.
+- Validar acesso negado, usuário sem permissão e tentativa de acessar dado de outro usuário/tenant.
+- Não usar apenas esconder botão ou rota no frontend como controle de segurança.
+- Alteração de sessão, permissão, reset de senha, convite ou troca de ownership exige revisão de Segurança/Privacidade.
+
+## Dados Pessoais E Privacidade
+
+- Coletar e exibir somente o dado necessário para a tarefa.
+- Mascarar PII quando a visualização completa não for necessária.
+- Não enviar PII para analytics, logs, tracing, erro de frontend ou ferramenta externa sem base clara.
+- Não incluir dados reais sensíveis em seed, fixture, screenshot ou documentação.
+- Exportação, exclusão e retenção de dados precisam de Produto + Segurança quando afetarem usuário real.
+
+## Secrets E Configuração
+
+- Secrets nunca entram em commit, log, screenshot ou mensagem de erro.
+- Usar `.env.example` sem valores reais.
+- Validar que novas integrações documentam variáveis necessárias sem vazar credenciais.
+- Rotação/revogação deve ser considerada se um secret foi exposto.
+
+## APIs, Webhooks E Integrações
+
+- Validar entrada no servidor com schema ou regra explícita.
+- Definir timeout, tratamento de erro e retry quando chamar serviço externo.
+- Verificar autenticação, rate limit, paginação, termos de uso, licença e custo.
+- Webhook precisa de verificação de assinatura ou segredo quando a fonte suportar.
+- Não persistir payload externo sensível sem necessidade.
+
+## Uploads E Arquivos
+
+- Validar tipo, tamanho e origem do arquivo no servidor.
+- Não confiar apenas em extensão ou MIME enviado pelo cliente.
+- Evitar servir upload executável no mesmo domínio quando houver risco.
+- Considerar antivírus/sandbox quando o produto aceitar arquivos de usuários externos.
+
+## Dependências E Supply Chain
+
+- Preferir dependência já existente no projeto.
+- Antes de adicionar dependência nova, verificar manutenção, licença, popularidade, superfície de ataque e custo.
+- Dependência que roda em runtime, build, CI ou manipula dados sensíveis exige revisão de Arquiteto ou Segurança.
+- Não adicionar biblioteca grande para resolver problema pequeno sem justificativa.
+
+## Frontend
+
+- Sanitizar conteúdo dinâmico quando houver HTML, markdown ou rich text.
+- Evitar armazenar token sensível em localStorage quando houver alternativa mais segura no projeto.
+- Não colocar regras de autorização apenas no cliente.
+- Erros visíveis ao usuário não devem revelar stack, query, token, segredo ou dado de outro usuário.
+
+## Evidência Mínima
+
+Ao finalizar tarefa de segurança, registrar:
+
+- cenário protegido;
+- como auth/autorização foram verificados;
+- onde PII/secrets/logs foram considerados;
+- testes ou validações executadas;
+- risco residual, se houver.
 """,
     "PADROES_DE_FALHA.md": """# Padrões De Falha
 
@@ -1153,6 +1654,11 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 - Jornada principal do usuário.
 - Métricas de sucesso.
 - Linguagem/tom padrão.
+
+## Frescor Do Contexto
+
+- Última revisão humana: A confirmar.
+- Última conferência contra o repo: gerado na instalação; revisar quando houver mudança relevante.
 """,
         "seguranca.md": f"""# Contexto Segurança E Privacidade
 
@@ -1170,6 +1676,12 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 - Política de secrets.
 - Dados pessoais ou regulados.
 - Requisitos de auth/autorização.
+- APIs externas, uploads, dependências e integrações que exigem baseline de segurança.
+
+## Frescor Do Contexto
+
+- Última revisão humana: A confirmar.
+- Última conferência contra o repo: gerado na instalação; revisar quando auth, dados, secrets, integrações ou dependências mudarem.
 """,
     }
     frameworks = discovery.frameworks if discovery else set()
@@ -1187,17 +1699,41 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 ## Reuso Obrigatório
 
 - Antes de criar UI, procurar componentes compartilhados, telas parecidas, tokens, estilos, hooks e utilitários existentes.
+- Antes de UI relevante, definir contrato de UX: tarefa principal, público, padrão local, estados e evidência esperada.
+- Se houver design system oficial externo, registrar link/pacote/versão e como o agente deve acessá-lo.
+- Se o design system estiver no GitHub e ainda não estiver registrado, pedir link, branch/tag/versão e se é público ou privado.
+- Validar acesso via `gh auth status` e `gh repo view ORG/REPO` quando GitHub for necessário.
+- Se o agente não conseguir acessar o design system externo, ele deve avisar o humano e sugerir uma ou duas formas de consumo: `gh auth login`, liberar acesso, instalar pacote, anexar snapshot ou copiar tokens/componentes mínimos para este repositório.
+- Não pedir token ou credencial no chat.
 - Registrar no resumo da entrega quando um componente novo for necessário e por quê.
 - Preferir consistência visual do produto a composições novas sem justificativa.
 
+## Design System Oficial
+
+- GitHub/repositório: A confirmar.
+- Branch/tag/versão: A confirmar.
+- Pacote oficial: A confirmar.
+- Público ou privado: A confirmar.
+- Forma de acesso: A confirmar.
+- Prioridade: componentes locais primeiro, depois design system oficial, salvo regra diferente do projeto.
+- Fallback quando inacessível: snapshot/export em `docs/context/`, pacote instalado ou tokens/componentes mínimos copiados para o repo.
+- Última validação de acesso: A confirmar.
+
 ## A Confirmar
 
-- Design system.
+- Design system local ou externo.
+- Link, pacote, versão, branch ou tag do design system oficial.
 - Biblioteca de componentes.
 - Tokens de cor, espaçamento, tipografia e radius.
 - Convenções para ícones, tabelas, formulários, modais, cards e empty states.
 - Estados loading/empty/error.
 - Acessibilidade e responsividade.
+- Comando de runtime/dev server para validação visual.
+
+## Frescor Do Contexto
+
+- Última revisão humana: A confirmar.
+- Última conferência contra o repo: gerado na instalação; revisar quando componentes, tokens, design system, rotas ou comandos mudarem.
 """
     if not discovery or {"Hono", "Express", "Fastify", "NestJS", "Django", "FastAPI", "Flask"} & frameworks:
         docs["backend.md"] = f"""# Contexto Backend
@@ -1211,6 +1747,11 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 - Formato de erro.
 - Validação de entrada.
 - Boundaries entre handlers/controllers e services.
+
+## Frescor Do Contexto
+
+- Última revisão humana: A confirmar.
+- Última conferência contra o repo: gerado na instalação; revisar quando rotas, contratos, validações ou services mudarem.
 """
     if not discovery or discovery.migrations or {"Drizzle", "Prisma", "TypeORM", "Sequelize"} & frameworks:
         docs["db.md"] = f"""# Contexto DB
@@ -1224,6 +1765,11 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 - Source of truth do schema.
 - Política de migrations/rollback.
 - Seeds e dados de teste.
+
+## Frescor Do Contexto
+
+- Última revisão humana: A confirmar.
+- Última conferência contra o repo: gerado na instalação; revisar quando schema, migrations, seeds ou índices mudarem.
 """
     if not discovery or discovery.docker or discovery.ci:
         docs["infra.md"] = f"""# Contexto Infra
@@ -1241,6 +1787,11 @@ def context_docs(discovery: Discovery | None, brief: dict[str, str]) -> dict[str
 - Deploy target.
 - Rollback.
 - Observabilidade.
+
+## Frescor Do Contexto
+
+- Última revisão humana: A confirmar.
+- Última conferência contra o repo: gerado na instalação; revisar quando Docker, CI/CD, env, deploy ou observabilidade mudarem.
 """
     return docs
 
