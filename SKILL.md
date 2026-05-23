@@ -1,6 +1,6 @@
 ---
 name: ai-workflow-installer
-description: Install or update a reusable AI-agent workflow documentation kit in software repositories. Use when Codex needs to bootstrap AGENTS.md, AI_CONTEXT.md, FEATURE_STATUS.md, TECH_DEBT.md, docs/ia workflows, risk matrix, agent roles, discovery/planning for vague requests, frontend premium standards, UI component reuse, research/reference workflows, cost approval gates, definition of done, failure patterns, ADR/debt structure, or migrate an existing repo to a more reliable AI-assisted development process.
+description: Install or update a reusable AI-agent workflow documentation kit in software repositories. Use when Codex needs to bootstrap AGENTS.md, AI_CONTEXT.md, FEATURE_STATUS.md, TECH_DEBT.md, docs/ia workflows, triage/intake, risk matrix, agent roles, real subagent orchestration guidance, discovery/planning for vague requests, frontend premium standards, UI component reuse, visual/runtime validation, living context sync, external GitHub design system guidance, gh access checks, research/reference workflows, security baseline, validation evidence, cost approval gates, definition of done, failure patterns, ADR/debt structure, or migrate an existing repo to a more reliable AI-assisted development process.
 ---
 
 # AI Workflow Installer
@@ -30,8 +30,8 @@ Use this skill to install or update a reusable AI-assisted development workflow 
 5. Customize generated placeholders:
    - fill `AI_CONTEXT.md` with the actual stack, commands, and sensitive areas
    - fill `FEATURE_STATUS.md` with real ready/partial/stub status
-   - fill `docs/context/frontend.md` with real component libraries, tokens, UI conventions, and reusable patterns
-   - review `docs/ia/DESCOBERTA_E_PLANEJAMENTO.md`, `docs/ia/PADROES_FRONTEND.md`, `docs/ia/PESQUISA_E_REFERENCIAS.md`, and `docs/ia/CUSTO_E_APROVACAO.md` against project needs
+   - fill `docs/context/frontend.md` with real component libraries, tokens, UI conventions, reusable patterns, and official design system links/packages/access notes when available
+   - review `docs/ia/TRIAGEM_E_INTAKE.md`, `docs/ia/ORQUESTRACAO_DE_AGENTES.md`, `docs/ia/DESCOBERTA_E_PLANEJAMENTO.md`, `docs/ia/PADROES_FRONTEND.md`, `docs/ia/VALIDACAO_VISUAL_E_RUNTIME.md`, `docs/ia/PESQUISA_E_REFERENCIAS.md`, `docs/ia/PADROES_SEGURANCA.md`, `docs/ia/SINCRONIA_DE_CONTEXTO.md`, `docs/ia/CUSTO_E_APROVACAO.md`, and `docs/ia/EVIDENCIAS_E_VALIDACAO.md` against project needs
    - keep `AGENTS.md` short and route details to `docs/ia/`
 6. Preserve existing user/project knowledge:
    - archive long docs before replacing them
@@ -43,6 +43,8 @@ Use this skill to install or update a reusable AI-assisted development workflow 
    - confirm `CLAUDE.md` is a compatibility bridge, not a duplicate protocol
    - confirm vague improvement requests require discovery/planning and human approval before implementation
    - confirm frontend rules require component/token/pattern reuse before new UI
+   - confirm triage/intake, security baseline, and validation evidence are present in `docs/ia/`
+   - confirm real subagent orchestration, visual/runtime validation, and living context sync docs are present
    - confirm cost-bearing work requires explicit human approval before implementation
 
 ## Installer Script
@@ -82,7 +84,7 @@ The script creates:
 - `TECH_DEBT.md`
 - `CHANGELOG.md`
 - `PROJECT_MEMORY.md`
-- `docs/ia/*`, including discovery/planning for vague requests, frontend standards, research/reference workflow, and cost approval gate
+- `docs/ia/*`, including triage/intake, real subagent orchestration, discovery/planning for vague requests, frontend standards, visual/runtime validation, research/reference workflow, security baseline, living context sync, validation evidence, and cost approval gate
 - `docs/context/*`
 - `docs/decisions/README.md`
 - `docs/debt/README.md`
